@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Gyan Automation</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.css">
+
+<style>
+/* ============ ROOT & RESET ============ */
+:root{
+    --primary-bg:#f4f7f6; --white:#ffffff; --text-dark:#1a1a1a; --text-gray:#7a7a7a;
+    --border-color:#eef2f5; --shadow:0 8px 24px rgba(0,0,0,0.06); --shadow-hover:0 12px 30px rgba(0,0,0,0.12);
+    --transition:all 0.3s cubic-bezier(0.25,0.8,0.25,1); --radius:20px; --primary:#0ea5e9;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:#e2e8f0;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;overflow:hidden;}
+.app-container{width:100%;height:100vh;background:var(--primary-bg);position:relative;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ============ AUTH SCREEN (Split Layout) ============ */
+#auth-screen{position:absolute;inset:0;z-index:1000;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;background:linear-gradient(140deg,#0b1220 0%,#0f172a 45%,#0c4a6e 100%);transition:opacity .5s ease, transform .5s ease;}
+#auth-screen.hide{opacity:0;pointer-events:none;transform:scale(1.04);}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;pointer-events:none;}
+.blob1{width:260px;height:260px;background:#0ea5e9;top:-70px;left:-80px;animation:blobMove 14s ease-in-out infinite;}
+.blob2{width:220px;height:220px;background:#7c3aed;bottom:-50px;right:-70px;animation:blobMove 18s ease-in-out infinite reverse;}
+.blob3{width:170px;height:170px;background:#10b981;top:46%;left:58%;animation:blobMove 16s ease-in-out infinite 2s;}
+@keyframes blobMove{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(30px,-40px) scale(1.15);}66%{transform:translate(-25px,25px) scale(.9);}}
+
+.auth-left{display:none;max-width:450px;color:#fff;text-align:left;z-index:2;position:relative;}
+.auth-left h1{font-size:38px;font-weight:800;line-height:1.2;margin-bottom:16px;}
+.auth-left p{font-size:15px;color:#cbd5e1;margin-bottom:24px;line-height:1.6;}
+
+.auth-card{position:relative;width:100%;max-width:380px;background:rgba(255,255,255,0.075);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,0.14);border-radius:26px;padding:28px 24px 24px;box-shadow:0 25px 60px rgba(0,0,0,0.45);animation:cardIn .75s cubic-bezier(.16,1,.3,1);z-index:2;}
+@keyframes cardIn{from{opacity:0;transform:translateY(34px) scale(.96);}to{opacity:1;transform:none;}}
+.auth-logo{width:74px;height:74px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,#0ea5e9,#2563eb);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 30px rgba(14,165,233,.45);animation:logoFloat 3.4s ease-in-out infinite;overflow:hidden;}
+.auth-logo i{font-size:32px;color:#fff;}
+.auth-logo img{width:100%;height:100%;object-fit:cover;display:none;}
+@keyframes logoFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+.auth-title{text-align:center;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.4px;}
+.auth-sub{text-align:center;font-size:11.5px;color:#94a3b8;margin-top:3px;letter-spacing:1.6px;text-transform:uppercase;margin-bottom:16px;}
+
+.auth-chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.auth-chips span{font-size:10px;color:#cbd5e1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:4px 10px;border-radius:20px;}
+
+.auth-tabs{position:relative;display:flex;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:4px;margin-bottom:20px;}
+.auth-tab{flex:1;text-align:center;padding:10px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;position:relative;z-index:2;transition:color .3s;}
+.auth-tab.active{color:#fff;}
+.auth-pill{position:absolute;top:4px;left:4px;width:calc(50% - 4px);height:calc(100% - 8px);background:linear-gradient(135deg,#0ea5e9,#2563eb);border-radius:11px;transition:transform .38s cubic-bezier(.16,1,.3,1);z-index:1;box-shadow:0 4px 14px rgba(37,99,235,.45);}
+.auth-tabs[data-active="register"] .auth-pill{transform:translateX(100%);}
+
+.auth-field{position:relative;margin-bottom:14px;}
+.auth-field i{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#64748b;font-size:14px;transition:color .3s;pointer-events:none;}
+.auth-field input{width:100%;padding:15px 16px 15px 46px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);border-radius:14px;color:#fff;font-size:13.5px;outline:none;transition:all .3s;font-family:inherit;}
+.auth-field input::placeholder{color:#64748b;}
+.auth-field input:focus{border-color:#38bdf8;background:rgba(255,255,255,.12);box-shadow:0 0 0 4px rgba(56,189,248,.15);}
+.auth-forgot{text-align:right;font-size:11.5px;color:#38bdf8;font-weight:500;margin:-4px 0 16px;cursor:pointer;}
+.auth-forgot:hover{text-decoration:underline;}
+.auth-btn{width:100%;padding:15px;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;font-size:14.5px;font-weight:600;font-family:inherit;position:relative;overflow:hidden;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:9px;}
+.auth-btn::after{content:'';position:absolute;top:0;left:-110%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transition:left .65s;}
+.auth-btn:hover::after{left:110%;}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(37,99,235,.45);}
+.auth-btn:disabled{opacity:.75;cursor:not-allowed;transform:none;}
+.auth-msg{font-size:12px;text-align:center;min-height:17px;margin-top:13px;opacity:0;transition:opacity .3s;font-weight:500;}
+.auth-msg.show{opacity:1;}
+.auth-msg.error{color:#f87171;}
+.auth-msg.success{color:#4ade80;}
+.auth-hint{text-align:center;font-size:10.5px;color:#64748b;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px;}
+
+/* ============ MAIN APP ============ */
+#app-screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:var(--transition);background:var(--primary-bg);}
+#app-screen.active{opacity:1;pointer-events:auto;}
+.app-header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(0,0,0,.03);}
+.header-left{display:flex;align-items:center;gap:15px;}
+.menu-icon,.bell-icon{font-size:20px;color:#334155;cursor:pointer;transition:transform .2s;}
+.menu-icon:active,.bell-icon:active{transform:scale(.85);}
+.app-title{font-size:17px;font-weight:700;color:#0f172a;letter-spacing:-.5px;}
+.main-content{flex:1;display:flex;flex-direction:column;overflow-y:auto;position:relative;min-height:0;scroll-behavior:smooth;scrollbar-width:none;}
+.main-content::-webkit-scrollbar{display:none;}
+.view-section{display:none;padding:20px;padding-bottom:100px;animation:slideUp .4s cubic-bezier(.16,1,.3,1);max-width:1200px;margin:0 auto;width:100%;}
+.view-section.active{display:block;}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+
+.greeting-area{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.greeting h2{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:2px;}
+.greeting p{font-size:13px;color:#64748b;}
+.profile-avatar{width:48px;height:48px;border-radius:50%;cursor:pointer;background:url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png') center/cover;border:2px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.12);}
+
+.slider-wrapper{width:100%;height:240px;overflow:hidden;position:relative;margin-bottom:24px;box-shadow:0 10px 25px rgba(0,0,0,.10);border-radius:16px;background:#0f172a;}
+.slider-track{display:flex;height:100%;transition:transform .7s cubic-bezier(.22,1,.36,1);}
+.slide-img{min-width:100%;height:100%;object-fit:cover;display:block;user-select:none;pointer-events:none;}
+.slider-dots{position:absolute;bottom:12px;right:14px;display:flex;gap:6px;z-index:2;}
+.dot{width:8px;height:8px;background:rgba(255,255,255,.45);border-radius:10px;cursor:pointer;transition:all .3s;}
+.dot.active{background:#fff;width:20px;}
+
+.section-title{font-size:18px;font-weight:700;color:#0f172a;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));gap:16px;}
+.tile{position:relative;overflow:hidden;border:none;cursor:pointer;color:#fff;font-family:inherit;min-height:140px;border-radius:20px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-shadow:0 8px 20px rgba(15,23,42,.14);transition:transform .25s cubic-bezier(.25,.8,.25,1),box-shadow .25s;text-align:center;}
+.tile::before{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.14);top:-44px;right:-36px;pointer-events:none;}
+.tile::after{content:'';position:absolute;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.09);bottom:-30px;left:-24px;pointer-events:none;}
+.tile:hover{transform:translateY(-3px);box-shadow:0 14px 28px rgba(15,23,42,.2);}
+.tile:active{transform:scale(.96);}
+.tile-ico{position:relative;z-index:1;width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:25px;box-shadow:0 6px 14px rgba(0,0,0,.12);}
+.tile-lbl{position:relative;z-index:1;font-size:14px;font-weight:600;letter-spacing:.1px;line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,.18);}
+.t-orange{background:linear-gradient(145deg,#ff9a4d,#f2691b);}
+.t-blue{background:linear-gradient(145deg,#6aa6f5,#3d7fe0);}
+.t-cyan{background:linear-gradient(145deg,#22d3ee,#0aa5c7);}
+.t-green{background:linear-gradient(145deg,#2fd35b,#14a83a);}
+.t-royal{background:linear-gradient(145deg,#2f7bf0,#1553c9);}
+.t-yellow{background:linear-gradient(145deg,#f7c60f,#e29a00);}
+.t-pink{background:linear-gradient(145deg,#ff3d86,#e0105f);}
+.t-deep{background:linear-gradient(145deg,#ff8433,#e4570c);}
+
+.sub-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.back-btn{width:42px;height:42px;border-radius:12px;border:none;background:#fff;color:#0f172a;box-shadow:var(--shadow);cursor:pointer;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.back-btn:active{transform:scale(.9);}
+.sub-head .section-title{margin:0;}
+
+.batch-list{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:20px;}
+.batch-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:var(--transition);display:flex;flex-direction:column;}
+.batch-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover);}
+.batch-img{height:180px;background-size:cover;background-position:center;position:relative;background-color:#e2e8f0;}
+.ribbon.free{position:absolute;top:12px;left:12px;background:#10b981;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;letter-spacing:.6px;}
+.ribbon.new{position:absolute;top:12px;left:12px;background:#0ea5e9;color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:6px;letter-spacing:.6px;}
+.batch-body{padding:20px;flex:1;display:flex;flex-direction:column;}
+.batch-title{font-size:16px;font-weight:700;color:#0f172a;line-height:1.3;margin-bottom:8px;}
+.batch-meta{font-size:12px;color:#64748b;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.batch-desc{font-size:13px;color:#94a3b8;line-height:1.5;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;}
+.batch-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;}
+.batch-price{font-size:20px;font-weight:800;color:#0f172a;}
+.btn-buy{padding:12px 24px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;font-weight:600;font-size:13px;font-family:inherit;transition:all .3s;display:inline-flex;align-items:center;gap:6px;position:relative;overflow:hidden;}
+.btn-buy::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transition:left .6s;}
+.btn-buy:hover::after{left:100%;}
+.btn-buy:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(37,99,235,.35);}
+.btn-buy.owned{background:#e8f7ef;color:#059669;cursor:pointer;box-shadow:none;}
+
+.batch-tabs{display:flex;background:#fff;border-radius:12px;padding:6px;margin-bottom:24px;border:1px solid var(--border-color);}
+.batch-tabs div{flex:1;text-align:center;padding:12px;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;color:#64748b;transition:.3s;}
+.batch-tabs div.active{background:#0f172a;color:#fff;box-shadow:var(--shadow);}
+.batch-banner{width:100%;height:280px;border-radius:16px;object-fit:cover;margin-bottom:20px;box-shadow:var(--shadow);background:#e2e8f0;}
+.batch-detail-title{font-size:22px;font-weight:700;margin-bottom:10px;color:#0f172a;}
+.batch-detail-price{font-size:26px;font-weight:800;margin-bottom:16px;color:#0f172a;}
+.batch-meta-list{display:flex;flex-direction:column;gap:10px;color:#64748b;font-size:14px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border-color);}
+
+.folder-card{background:#fff;border:1px solid var(--border-color);border-radius:14px;padding:18px;display:flex;align-items:center;gap:16px;cursor:pointer;margin-bottom:14px;box-shadow:var(--shadow);transition:var(--transition);}
+.folder-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.folder-icon{width:54px;height:54px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;color:#64748b;flex-shrink:0;}
+.folder-title{font-size:15px;font-weight:600;color:#0f172a;margin-bottom:4px;}
+.folder-meta{font-size:13px;color:#64748b;}
+.video-card{background:#fff;border:1px solid var(--border-color);border-radius:14px;padding:14px;display:flex;gap:16px;margin-bottom:14px;box-shadow:var(--shadow);transition:var(--transition);}
+.video-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-hover);}
+.video-thumb{width:120px;height:75px;background:#e2e8f0;border-radius:10px;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;}
+.video-play-btn{position:absolute;background:rgba(0,0,0,0.6);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.video-title{font-size:14px;font-weight:600;margin-bottom:6px;color:#0f172a;}
+.btn-watch{background:#0f172a;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;display:inline-flex;align-items:center;gap:6px;}
+
+.sticky-buy-bar{position:absolute;bottom:0;left:0;width:100%;background:#fff;padding:16px 20px;box-shadow:0 -4px 15px rgba(0,0,0,0.08);z-index:50;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border-color);transform:translateY(100%);transition:transform .3s;}
+.sticky-buy-bar.active{transform:translateY(0);}
+.btn-buy-main{width:100%;max-width:600px;margin:0 auto;padding:16px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-buy-main:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,99,235,.4);}
+
+.bottom-nav{position:absolute;bottom:0;left:0;width:100%;background:rgba(255,255,255,.95);backdrop-filter:blur(15px);display:flex;justify-content:space-around;padding:10px 0 15px;box-shadow:0 -4px 20px rgba(0,0,0,.05);z-index:100;border-top:1px solid rgba(0,0,0,.03);transition:transform .3s;}
+.bottom-nav.hide{transform:translateY(100%);}
+.nav-item{display:flex;flex-direction:column;align-items:center;color:#94a3b8;font-size:10px;font-weight:500;cursor:pointer;transition:var(--transition);text-decoration:none;padding:6px 12px;border-radius:12px;}
+.nav-item i{font-size:20px;margin-bottom:4px;transition:transform .3s;}
+.nav-item.active{color:#0ea5e9;}
+.nav-item.active i{transform:translateY(-4px) scale(1.1);text-shadow:0 4px 10px rgba(14,165,233,.4);}
+
+.drawer-overlay{position:absolute;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:200;opacity:0;pointer-events:none;transition:var(--transition);}
+.drawer-overlay.active{opacity:1;pointer-events:auto;}
+.drawer{position:absolute;top:0;left:-85%;width:85%;max-width:320px;height:100%;background:var(--white);z-index:201;transition:var(--transition);padding:25px 20px;display:flex;flex-direction:column;}
+.drawer.active{left:0;box-shadow:10px 0 30px rgba(0,0,0,.15);}
+.drawer-profile{display:flex;flex-direction:column;align-items:flex-start;margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--border-color);}
+.drawer-profile img{width:64px;height:64px;border-radius:50%;border:3px solid #0ea5e9;margin-bottom:12px;}
+.drawer-profile h2{font-size:18px;font-weight:700;color:#0f172a;}
+.drawer-menu{list-style:none;flex:1;overflow-y:auto;}
+.drawer-menu li{padding:14px 12px;display:flex;align-items:center;gap:15px;font-size:14px;font-weight:500;color:#475569;cursor:pointer;border-radius:12px;transition:var(--transition);margin-bottom:4px;}
+.drawer-menu li:hover{background:#f1f5f9;color:#0ea5e9;}
+.drawer-menu li i{width:22px;text-align:center;font-size:16px;}
+.drawer-footer{text-align:center;padding-top:18px;border-top:1px solid var(--border-color);}
+.drawer-footer p{font-size:12px;color:#94a3b8;margin-bottom:10px;}
+.drawer-footer i{font-size:26px;color:#25D366;cursor:pointer;transition:transform .2s;}
+
+.course-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px;transition:var(--transition);display:flex;flex-direction:column;}
+.course-image{width:100%;height:180px;background:#e2e8f0;background-size:cover;background-position:center;}
+.course-details{padding:20px;}
+.course-title{font-size:16px;font-weight:700;color:#0f172a;margin-bottom:8px;}
+.course-expiry{font-size:13px;color:#64748b;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.status{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
+.status.ok{background:#dcfce7;color:#059669;}
+.status.exp{background:#fee2e2;color:#dc2626;}
+.btn-view{width:100%;padding:14px;background:#0f172a;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:var(--transition);}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;}
+.empty-state i{font-size:72px;color:#cbd5e1;margin-bottom:16px;}
+.empty-state h3{font-size:18px;font-weight:700;color:#0f172a;margin-bottom:6px;}
+.empty-state p{font-size:14px;color:#64748b;}
+
+#chat-view{padding:0;}
+#chat-view.active{display:flex;flex-direction:column;flex:1;min-height:0;padding-bottom:75px;max-width:100%;}
+.chat-messages{flex:1;min-height:0;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:#f8fafc;}
+.chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;gap:12px;padding:40px;text-align:center;margin:auto;}
+.chat-empty i{font-size:48px;color:#cbd5e1;}
+.chat-empty p{font-size:14px;}
+.msg{display:flex;flex-direction:column;max-width:75%;animation:msgIn .3s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.msg.me{align-self:flex-end;align-items:flex-end;}
+.msg.them{align-self:flex-start;align-items:flex-start;}
+.bubble{padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.45;word-break:break-word;}
+.msg.me .bubble{background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;border-bottom-right-radius:4px;}
+.msg.them .bubble{background:#fff;color:#0f172a;border-bottom-left-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.05);}
+.msg-time{font-size:10px;color:#94a3b8;margin-top:4px;padding:0 4px;}
+.chat-input-area{background:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--border-color);width:100%;}
+.chat-input-area input{flex:1;border:none;outline:none;font-size:14px;padding:14px 20px;background:#f1f5f9;border-radius:25px;font-family:inherit;}
+.chat-input-area i{font-size:20px;color:#0ea5e9;cursor:pointer;transition:transform .2s;}
+
+/* ============ ADMIN PANEL (Upgraded) ============ */
+#admin-screen{position:absolute;inset:0;background:#f0f4f8;display:none;flex-direction:column;z-index:900;}
+#admin-screen.active{display:flex;}
+.admin-header{background:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,0.05);z-index:10;}
+.admin-chip{display:inline-flex;align-items:center;gap:6px;background:#0f172a;color:#fff;font-size:11px;font-weight:700;padding:8px 16px;border-radius:20px;letter-spacing:.8px;}
+.admin-tabs{display:flex;background:#fff;padding:0 10px;overflow-x:auto;scrollbar-width:none;box-shadow:0 4px 10px rgba(0,0,0,0.02);}
+.admin-tabs::-webkit-scrollbar{display:none;}
+.admin-tab{flex:0 0 auto;text-align:center;padding:16px 24px;font-size:13px;font-weight:600;color:#94a3b8;cursor:pointer;border-bottom:3px solid transparent;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;}
+.admin-tab:hover{color:#0ea5e9;}
+.admin-tab.active{color:#0ea5e9;border-bottom-color:#0ea5e9;}
+.admin-content{flex:1;overflow-y:auto;padding:24px;min-height:0;}
+.admin-pane{display:none;animation:slideUp .3s ease;max-width:1000px;margin:0 auto;}
+.admin-pane.active{display:block;}
+.admin-card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.04);margin-bottom:20px;border:1px solid #e2e8f0;}
+.admin-card h3{font-size:16px;font-weight:700;color:#0f172a;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.f-input{width:100%;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px;font-family:inherit;outline:none;margin-bottom:14px;transition:.2s;background:#f8fafc;resize:none;color:#0f172a;}
+.f-input:focus{border-color:#0ea5e9;background:#fff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.f-row{display:flex;gap:14px;margin-bottom:14px;align-items:stretch;}
+.f-row > *{flex:1;min-width:0;}
+.f-row .f-input{margin-bottom:0;}
+.admin-btn{width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;font-size:14px;font-weight:600;font-family:inherit;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.admin-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,99,235,.35);}
+.admin-batch-row{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid #f1f5f9;}
+.admin-batch-row:last-child{border-bottom:none;}
+.admin-batch-thumb{width:60px;height:60px;border-radius:12px;background-size:cover;background-position:center;background-color:#e2e8f0;flex-shrink:0;}
+.conv-body{flex:1;min-width:0;}
+.conv-name{font-size:14px;font-weight:600;color:#0f172a;}
+.conv-preview{font-size:12px;color:#94a3b8;margin-top:4px;}
+.edit-btn{color:#0ea5e9;background:#e0f2fe;border:none;font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;transition:.2s;display:flex;align-items:center;gap:6px;}
+.edit-btn:hover{background:#bae6fd;}
+.del-btn{color:#ef4444;background:#fee2e2;border:none;font-size:14px;cursor:pointer;padding:10px;border-radius:8px;transition:transform .2s;}
+.del-btn:hover{background:#fecaca;}
+
+/* ============ MODAL ============ */
+.modal{position:absolute;inset:0;background:var(--primary-bg);z-index:3000;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1);opacity:0;pointer-events:none;}
+.modal.active{transform:translateY(0);opacity:1;pointer-events:auto;}
+.modal-header{padding:16px 20px;display:flex;align-items:center;gap:16px;background:#fff;border-bottom:1px solid var(--border-color);}
+.modal-header h2{font-size:18px;font-weight:700;color:#0f172a;}
+.modal-body{flex:1;overflow-y:auto;padding:20px;}
+
+.pay-overlay{position:absolute;inset:0;background:rgba(15,23,42,.62);backdrop-filter:blur(5px);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:.3s;}
+.pay-overlay.active{opacity:1;pointer-events:auto;}
+.pay-sheet{width:100%;max-width:500px;background:#fff;border-radius:26px 26px 0 0;padding:24px 20px 32px;max-height:93%;overflow-y:auto;transform:translateY(100%);transition:transform .45s cubic-bezier(.16,1,.3,1);}
+.pay-overlay.active .pay-sheet{transform:translateY(0);}
+.pay-head{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:#64748b;margin-bottom:20px;}
+.pay-head span{display:flex;align-items:center;gap:8px;}
+.pay-close{font-size:18px;color:#94a3b8;cursor:pointer;padding:4px;}
+.pay-amount{font-size:32px;font-weight:800;color:#0f172a;text-align:center;letter-spacing:-1px;}
+.pay-batch{font-size:13px;color:#64748b;text-align:center;margin-bottom:24px;line-height:1.4;}
+.pay-methods{display:flex;gap:10px;margin-bottom:24px;}
+.pay-method{flex:1;padding:14px 4px;border:1.5px solid #e2e8f0;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:11px;font-weight:600;color:#64748b;cursor:pointer;transition:.25s;}
+.pay-method i{font-size:18px;}
+.pay-method.active{border-color:#0ea5e9;color:#0ea5e9;background:#f0f9ff;box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.pay-panel{margin-bottom:20px;}
+.pay-note{font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:6px;margin-top:6px;}
+.pay-btn{width:100%;padding:16px;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:15px;font-weight:700;font-family:inherit;transition:.3s;display:flex;align-items:center;justify-content:center;gap:10px;position:relative;overflow:hidden;}
+.pay-btn::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transition:left .7s;}
+.pay-btn:hover::after{left:100%;}
+.pay-btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(16,185,129,.4);}
+.pay-secure{text-align:center;font-size:11px;color:#94a3b8;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.pay-success{text-align:center;padding:24px 0 10px;}
+.success-check{width:90px;height:90px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:popIn .55s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes popIn{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+.success-check i{font-size:44px;color:#10b981;}
+.pay-success h3{font-size:20px;font-weight:700;color:#0f172a;margin-bottom:8px;}
+.pay-success p{font-size:14px;color:#64748b;margin-bottom:16px;}
+.pay-receipt{font-size:12px;color:#94a3b8;background:#f8fafc;padding:12px;border-radius:10px;display:inline-block;}
+
+.toast{position:absolute;left:50%;bottom:110px;transform:translate(-50%,20px);background:#0f172a;color:#fff;padding:14px 24px;border-radius:12px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:.35s;z-index:5000;max-width:90%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3);}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+
+/* ============ FIXES / OVERRIDES ============ */
+html,body{height:100%;}
+body{display:block;height:100vh;height:100dvh;overflow:hidden;}
+.app-container{height:100vh;height:100dvh;}
+
+/* ---- scroll fix ---- */
+#app-screen{overflow:hidden;}
+.main-content{flex:1 1 0;min-height:0;display:block;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:auto;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent;}
+.main-content::-webkit-scrollbar{display:block;width:8px;}
+.main-content::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;}
+.view-section{padding-bottom:150px;}
+#chat-view.active{display:flex;flex-direction:column;height:100%;padding-bottom:78px;}
+.admin-content{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+
+/* ---- home slider ---- */
+.slider-wrapper{height:auto;aspect-ratio:16/8;max-height:380px;}
+.slide-img{width:100%;height:100%;object-fit:cover;flex:0 0 100%;}
+
+/* ---- auth ---- */
+#auth-screen{display:flex;flex-direction:row;align-items:stretch;justify-content:center;overflow-y:auto;overflow-x:hidden;padding:22px;}
+#auth-screen > .auth-card{margin:auto;}
+.auth-left{display:none;}
+.auth-card{max-width:400px;}
+.auth-chips{flex-wrap:wrap;}
+@media(min-width:900px){.auth-chips{flex-wrap:nowrap;white-space:nowrap;}}
+.grad{background:linear-gradient(90deg,#38bdf8,#818cf8);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;}
+.net-fit{position:relative;margin-left:auto;}
+.net-stage{position:absolute;left:0;top:0;width:620px;height:440px;transform-origin:0 0;}
+.net-svg{position:absolute;left:0;top:0;overflow:visible;}
+.net-base{fill:none;stroke:rgba(56,189,248,.25);stroke-width:2;}
+.net-flow{fill:none;stroke:#38bdf8;stroke-width:2.5;stroke-dasharray:7 9;animation:netDash 1.2s linear infinite;filter:drop-shadow(0 0 4px rgba(56,189,248,.8));}
+@keyframes netDash{to{stroke-dashoffset:-16;}}
+.net-dot{fill:#fff;filter:drop-shadow(0 0 6px #38bdf8);}
+.net-joint{fill:#fff;filter:drop-shadow(0 0 6px #38bdf8);}
+.net-end{fill:#38bdf8;transform-box:fill-box;transform-origin:center;animation:netPulse 1.8s ease-in-out infinite;filter:drop-shadow(0 0 8px #38bdf8);}
+@keyframes netPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.7);opacity:.6;}}
+.net-node{position:absolute;height:44px;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;gap:9px;background:rgba(10,20,40,.92);border:1px solid rgba(56,189,248,.45);border-radius:12px;color:#fff;font-weight:600;font-size:14px;box-shadow:0 0 18px rgba(14,165,233,.18);backdrop-filter:blur(8px);z-index:2;}
+.net-node i{color:#38bdf8;font-size:16px;}
+.net-node.plc{background:rgba(14,165,233,.16);border-color:rgba(56,189,248,.8);box-shadow:0 0 26px rgba(14,165,233,.35);}
+
+@media(min-width:900px){
+    #auth-screen{padding:30px 40px;}
+    .auth-left{display:flex;flex-direction:column;justify-content:center;flex:0 1 620px;width:620px;max-width:620px;min-width:0;color:#fff;z-index:2;position:relative;margin:auto 0;}
+    .auth-left h1{font-size:46px;font-weight:800;line-height:1.15;margin-bottom:14px;letter-spacing:-1px;}
+    .auth-left p{font-size:15px;color:#cbd5e1;margin-bottom:22px;line-height:1.6;max-width:470px;}
+    #auth-screen > .auth-card{flex:0 0 clamp(390px,32vw,440px);max-width:440px;margin:auto 0 auto 0;padding:32px 30px 26px;}
+    .view-section{padding:30px 30px 150px;}
+    .home-grid{grid-template-columns:repeat(4,1fr);}
+    .tile{min-height:150px;}
+    .batch-list{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));}
+    #myCourses{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;}
+    .bottom-nav{left:50%;transform:translateX(-50%);width:min(720px,92%);bottom:14px;border-radius:22px;padding:10px 6px;box-shadow:0 10px 35px rgba(15,23,42,.15);}
+    .bottom-nav.hide{transform:translate(-50%,160%);}
+    .slider-wrapper{aspect-ratio:16/6;}
+}
+@media(min-width:900px) and (max-height:820px){
+    .auth-left h1{font-size:36px;}
+    .auth-left p{margin-bottom:12px;}
+}
+
+/* ---- admin chat ---- */
+.ac-wrap{background:#fff;border-radius:16px;border:1px solid #e2e8f0;display:flex;flex-direction:column;height:calc(100vh - 230px);height:calc(100dvh - 230px);min-height:380px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.04);}
+.ac-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #eef2f5;}
+.ac-head .conv-name{font-size:15px;}
+.ac-avatar{width:40px;height:40px;border-radius:50%;background:url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png') center/cover;flex-shrink:0;}
+.ac-wrap .chat-messages{flex:1;}
+.ac-wrap .chat-input-area i{font-size:22px;}
+.conv-last{font-size:12px;color:#94a3b8;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.conv-time{font-size:10px;color:#94a3b8;flex-shrink:0;}
+
+/* ---- app settings ---- */
+.set-label{font-size:13px;font-weight:700;color:#0f172a;display:block;margin-bottom:10px;}
+.set-hint{font-size:11.5px;color:#94a3b8;margin:-4px 0 14px;line-height:1.5;}
+.logo-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:26px;}
+.logo-prev{width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#2563eb);display:flex;align-items:center;justify-content:center;overflow:hidden;color:#fff;font-size:30px;flex-shrink:0;}
+.logo-prev img{width:100%;height:100%;object-fit:cover;}
+.slot{display:flex;gap:14px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin-bottom:12px;}
+.slot-prev{width:132px;height:62px;border-radius:10px;background:#e2e8f0 center/cover no-repeat;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:11px;font-weight:600;}
+.slot-body{flex:1;min-width:0;}
+.slot-body .f-input{margin-bottom:8px;padding:10px 12px;}
+.slot-title{font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;}
+.slot-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.mini-btn{border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;background:#e0f2fe;color:#0284c7;}
+.mini-btn.red{background:#fee2e2;color:#dc2626;}
+@media(max-width:560px){.slot{flex-direction:column;align-items:stretch;}.slot-prev{width:100%;height:110px;}.f-row{flex-wrap:wrap;}}
+
+/* ---- splash (3 sec) ---- */
+#splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 20%,#0c4a6e 0%,#0b1220 55%,#070b14 100%);color:#fff;transition:opacity .6s ease,visibility .6s;}
+#splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.sp-logo{width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#2563eb);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 0 rgba(14,165,233,.6);animation:spPop .8s cubic-bezier(.175,.885,.32,1.275) both,spPulse 1.6s ease-out .8s infinite;}
+.sp-logo i{font-size:46px;color:#fff;}
+.sp-logo img{width:100%;height:100%;object-fit:cover;display:none;}
+@keyframes spPop{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+@keyframes spPulse{0%{box-shadow:0 0 0 0 rgba(14,165,233,.55);}100%{box-shadow:0 0 0 34px rgba(14,165,233,0);}}
+#splash h1{font-size:28px;font-weight:800;margin-top:22px;letter-spacing:-.5px;animation:spUp .7s .3s both;}
+#splash p{font-size:12px;letter-spacing:3px;color:#94a3b8;margin-top:6px;animation:spUp .7s .5s both;}
+@keyframes spUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.sp-bar{width:190px;height:4px;background:rgba(255,255,255,.12);border-radius:4px;margin-top:34px;overflow:hidden;}
+.sp-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#818cf8);border-radius:4px;animation:spLoad 3s linear forwards;}
+@keyframes spLoad{to{width:100%;}}
+
+/* ---- PC home hero (SCADA diagram) ---- */
+.pc-hero{display:none;}
+@media(min-width:900px){
+    .slider-wrapper{display:none;}
+    .pc-hero{display:block;background:linear-gradient(160deg,#071428 0%,#0a2340 100%);border-radius:24px;padding:26px 20px;margin-bottom:26px;box-shadow:0 14px 36px rgba(7,20,40,.25);overflow:hidden;}
+    .pc-hero .net-fit{margin:0 auto;}
+    .hero-node{height:48px;font-size:16px;border-radius:13px;}
+    .hero-node i{font-size:19px;}
+}
+
+@media(min-width:900px){
+    #home-view{max-width:1100px;}
+    .pc-hero{padding:30px 20px 24px;margin-bottom:28px;}
+    .greeting-area{margin-bottom:18px;}
+}
+#batchTabBody,#folderItemsList{padding-bottom:110px;}
+.video-card,.folder-card,.batch-card,.course-card{cursor:pointer;}
+
+/* ---- INTRO (mobile): SCADA -> HMI -> PLC -> field devices build-up ---- */
+#intro{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;background:radial-gradient(circle at 30% 15%,#0c4a6e 0%,#0b1220 55%,#070b14 100%);color:#fff;transition:opacity .6s ease,visibility .6s;overflow:hidden;}
+#intro.hide{opacity:0;visibility:hidden;pointer-events:none;}
+#intro::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.05) 1px,transparent 1px);background-size:34px 34px;pointer-events:none;}
+.in-brand{text-align:center;position:relative;z-index:2;animation:inFade .7s .1s both;}
+.in-brand h1{font-size:26px;font-weight:800;letter-spacing:-.5px;}
+.in-brand p{font-size:11px;letter-spacing:3px;color:#94a3b8;margin-top:5px;}
+.in-fit{position:relative;z-index:2;}
+.in-stage{position:absolute;left:0;top:0;width:340px;height:430px;transform-origin:0 0;}
+.in-svg{position:absolute;left:0;top:0;overflow:visible;}
+.i-wire{fill:none;stroke:#38bdf8;stroke-width:2.5;stroke-dasharray:1;stroke-dashoffset:1;filter:drop-shadow(0 0 4px rgba(56,189,248,.8));animation:inDraw .6s ease-out var(--d) forwards;}
+@keyframes inDraw{to{stroke-dashoffset:0;}}
+.i-flow{opacity:0;animation:inFade .5s var(--d) forwards,netDash 1.2s linear infinite;}
+.i-dot{opacity:0;animation:inFade .4s var(--d) forwards;}
+.i-joint{opacity:0;animation:inFade .3s var(--d) forwards;}
+.in-node{opacity:0;animation:inNode .55s cubic-bezier(.175,.885,.32,1.275) var(--d) both;}
+.in-node.plc{animation:inNode .55s cubic-bezier(.175,.885,.32,1.275) var(--d) both,inGlow 1.8s ease-in-out 3.6s infinite;}
+@keyframes inNode{from{opacity:0;transform:translate(-50%,-50%) scale(.4);}to{opacity:1;transform:translate(-50%,-50%) scale(1);}}
+@keyframes inFade{from{opacity:0;}to{opacity:1;}}
+@keyframes inGlow{0%,100%{box-shadow:0 0 22px rgba(14,165,233,.35);}50%{box-shadow:0 0 38px rgba(56,189,248,.8);}}
+.in-foot{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:10px;animation:inFade .6s .2s both;}
+#introStatus{font-size:13px;color:#7dd3fc;font-weight:600;letter-spacing:.3px;min-height:18px;}
+.in-bar{width:200px;height:4px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;}
+.in-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#818cf8);border-radius:4px;animation:inLoad 5.2s linear forwards;}
+@keyframes inLoad{to{width:100%;}}
+.in-skip{font-size:11px;color:#64748b;letter-spacing:1px;animation:inFade .6s 1.6s both;}
+</style>
+</head>
+<body>
+
+
+<!-- INTRO ANIMATION (phones) -->
+<div id="intro">
+    <div class="in-brand">
+        <h1>Gyan Automation</h1>
+        <p>LEARN &bull; BUILD &bull; AUTOMATE</p>
+    </div>
+    <div class="in-fit" id="introFit">
+      <div class="in-stage" id="introStage">
+        <svg class="in-svg" width="340" height="430" viewBox="0 0 340 430">
+            <path id="iA" class="i-wire" pathLength="1" style="--d:.8s" d="M170 50 V100"/>
+            <path id="iB" class="i-wire" pathLength="1" style="--d:1.6s" d="M170 144 V196"/>
+            <path id="iC" class="i-wire" pathLength="1" style="--d:2.4s" d="M170 240 V290"/>
+            <path id="iD" class="i-wire" pathLength="1" style="--d:2.9s" d="M170 290 H55 V346"/>
+            <path id="iE" class="i-wire" pathLength="1" style="--d:2.9s" d="M170 290 V346"/>
+            <path id="iF" class="i-wire" pathLength="1" style="--d:2.9s" d="M170 290 H285 V346"/>
+
+            <path class="net-flow i-flow" style="--d:4.1s" d="M170 50 V100"/>
+            <path class="net-flow i-flow" style="--d:4.1s" d="M170 144 V196"/>
+            <path class="net-flow i-flow" style="--d:4.1s" d="M170 240 V290"/>
+            <path class="net-flow i-flow" style="--d:4.1s" d="M170 290 H55 V346"/>
+            <path class="net-flow i-flow" style="--d:4.1s" d="M170 290 V346"/>
+            <path class="net-flow i-flow" style="--d:4.1s" d="M170 290 H285 V346"/>
+
+            <circle class="net-joint i-joint" style="--d:3.2s" cx="170" cy="290" r="4.5"/>
+
+            <circle class="net-dot i-dot" style="--d:4.1s" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="0s"><mpath href="#iA"/></animateMotion></circle>
+            <circle class="net-dot i-dot" style="--d:4.1s" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-0.4s"><mpath href="#iB"/></animateMotion></circle>
+            <circle class="net-dot i-dot" style="--d:4.1s" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-0.8s"><mpath href="#iC"/></animateMotion></circle>
+            <circle class="net-dot i-dot" style="--d:4.1s" r="3.5"><animateMotion dur="2s" repeatCount="indefinite" begin="-1s"><mpath href="#iD"/></animateMotion></circle>
+            <circle class="net-dot i-dot" style="--d:4.1s" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-1.2s"><mpath href="#iE"/></animateMotion></circle>
+            <circle class="net-dot i-dot" style="--d:4.1s" r="3.5"><animateMotion dur="2s" repeatCount="indefinite" begin="-1.4s"><mpath href="#iF"/></animateMotion></circle>
+        </svg>
+        <div class="net-node in-node" style="--d:.3s;left:170px;top:28px;width:150px;"><i class="fas fa-network-wired"></i><span>SCADA</span></div>
+        <div class="net-node in-node" style="--d:1.3s;left:170px;top:122px;width:120px;"><i class="fas fa-desktop"></i><span>HMI</span></div>
+        <div class="net-node plc in-node" style="--d:2.1s;left:170px;top:218px;width:130px;"><i class="fas fa-microchip"></i><span>PLC</span></div>
+        <div class="net-node in-node" style="--d:3.5s;left:55px;top:368px;width:96px;"><i class="fas fa-bolt"></i><span>VFD</span></div>
+        <div class="net-node in-node" style="--d:3.65s;left:170px;top:368px;width:100px;"><i class="fas fa-cogs"></i><span>Servo</span></div>
+        <div class="net-node in-node" style="--d:3.8s;left:285px;top:368px;width:106px;"><i class="fas fa-tint"></i><span>Hydraulics</span></div>
+      </div>
+    </div>
+    <div class="in-foot">
+        <div id="introStatus">Initializing...</div>
+        <div class="in-bar"><span></span></div>
+        <div class="in-skip">TAP TO SKIP</div>
+    </div>
+</div>
+
+<div class="app-container">
+
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen">
+        <div class="blob blob1"></div><div class="blob blob2"></div><div class="blob blob3"></div>
+        
+        <div class="auth-left">
+            <h1>Seekho. Banao.<br><span class="grad">Automate karo.</span></h1>
+            <p>Industry-ready automation courses, live classes aur study material — ek hi platform par.</p>
+
+            <!-- PC ONLY: SCADA / PLC network animation -->
+            <div class="net-fit" id="netFit">
+              <div class="net-stage" id="netStage">
+                <svg class="net-svg" width="620" height="440" viewBox="0 0 620 440">
+                    <path id="pA" class="net-base" d="M270 48 V103"/>
+                    <path id="pB" class="net-base" d="M270 147 V203"/>
+                    <path id="pC" class="net-base" d="M270 247 V300"/>
+                    <path id="pD" class="net-base" d="M270 300 H70 V363"/>
+                    <path id="pE" class="net-base" d="M270 300 V363"/>
+                    <path id="pF" class="net-base" d="M270 300 H470 V363"/>
+                    <path id="pG" class="net-base" d="M325 225 H620"/>
+
+                    <path class="net-flow" d="M270 48 V103"/>
+                    <path class="net-flow" d="M270 147 V203"/>
+                    <path class="net-flow" d="M270 247 V300"/>
+                    <path class="net-flow" d="M270 300 H70 V363"/>
+                    <path class="net-flow" d="M270 300 V363"/>
+                    <path class="net-flow" d="M270 300 H470 V363"/>
+                    <path class="net-flow" d="M325 225 H620"/>
+
+                    <circle class="net-joint" cx="270" cy="300" r="4.5"/>
+                    <circle class="net-joint" cx="270" cy="75" r="3"/>
+                    <circle class="net-joint" cx="270" cy="175" r="3"/>
+                    <circle class="net-end" cx="620" cy="225" r="5"/>
+
+                    <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="0s"><mpath href="#pA"/></animateMotion></circle>
+                    <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-0.35s"><mpath href="#pB"/></animateMotion></circle>
+                    <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-0.7s"><mpath href="#pC"/></animateMotion></circle>
+                    <circle class="net-dot" r="3.5"><animateMotion dur="2s" repeatCount="indefinite" begin="-1s"><mpath href="#pD"/></animateMotion></circle>
+                    <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-1.2s"><mpath href="#pE"/></animateMotion></circle>
+                    <circle class="net-dot" r="3.5"><animateMotion dur="2s" repeatCount="indefinite" begin="-1.4s"><mpath href="#pF"/></animateMotion></circle>
+                    <circle class="net-dot" r="3.5"><animateMotion dur="2.2s" repeatCount="indefinite" begin="-0.5s"><mpath href="#pG"/></animateMotion></circle>
+                </svg>
+                <div class="net-node" style="left:270px;top:26px;width:140px;"><i class="fas fa-network-wired"></i><span>SCADA</span></div>
+                <div class="net-node" style="left:270px;top:125px;width:110px;"><i class="fas fa-desktop"></i><span>HMI</span></div>
+                <div class="net-node plc" style="left:270px;top:225px;width:110px;"><i class="fas fa-microchip"></i><span>PLC</span></div>
+                <div class="net-node" style="left:70px;top:385px;width:112px;"><i class="fas fa-bolt"></i><span>VFD</span></div>
+                <div class="net-node" style="left:270px;top:385px;width:124px;"><i class="fas fa-cogs"></i><span>Servo</span></div>
+                <div class="net-node" style="left:470px;top:385px;width:150px;"><i class="fas fa-tint"></i><span>Hydraulics</span></div>
+              </div>
+            </div>
+        </div>
+
+        <div class="auth-card">
+            <div class="auth-logo">
+                <i class="fas fa-robot" id="loginLogoIcon"></i>
+                <img id="loginLogoImg" src="" alt="Logo">
+            </div>
+            <h1 class="auth-title">Gyan Automation</h1>
+            <p class="auth-sub">Learn • Build • Automate</p>
+
+            <div class="auth-chips">
+                <span>🎓 Live Classes</span>
+                <span>📚 Notes & E-Books</span>
+                <span>👨‍🏫 Expert Mentors</span>
+            </div>
+
+            <div class="auth-tabs" data-active="login">
+                <div class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Login</div>
+                <div class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Register</div>
+                <div class="auth-pill"></div>
+            </div>
+
+            <form id="login-form" onsubmit="doLogin(event)">
+                <div class="auth-field"><input id="loginId" type="text" placeholder="Email / Phone" autocomplete="off" required><i class="far fa-envelope"></i></div>
+                <div class="auth-field"><input id="loginPass" type="password" placeholder="Password" autocomplete="off" required><i class="fas fa-lock"></i></div>
+                <div class="auth-forgot" onclick="resetPassword()">Forgot Password?</div>
+                <button type="submit" class="auth-btn" id="loginBtn">Login <i class="fas fa-arrow-right"></i></button>
+            </form>
+
+            <form id="register-form" style="display:none;" onsubmit="doRegister(event)">
+                <div class="auth-field"><input id="regName" type="text" placeholder="Full Name" autocomplete="off" required><i class="far fa-user"></i></div>
+                <div class="auth-field"><input id="regEmail" type="text" placeholder="Email / Phone" autocomplete="off" required><i class="far fa-envelope"></i></div>
+                <div class="auth-field"><input id="regPass" type="password" placeholder="Password (min 6 chars)" autocomplete="off" required><i class="fas fa-lock"></i></div>
+                <button type="submit" class="auth-btn" id="regBtn">Create Account <i class="fas fa-user-plus"></i></button>
+            </form>
+            <div class="auth-msg" id="authMsg"></div>
+            <p class="auth-hint"><i class="fas fa-shield-alt"></i> Secure login for students & admin</p>
+        </div>
+    </div>
+
+    <!-- STUDENT APP -->
+    <div id="app-screen">
+        <header class="app-header">
+            <div class="header-left">
+                <i class="fas fa-bars menu-icon" onclick="toggleDrawer()"></i>
+                <span class="app-title" id="appHeaderTitle">Gyan Automation</span>
+            </div>
+            <i class="far fa-bell bell-icon" onclick="toast('No new notifications')"></i>
+        </header>
+
+        <div class="main-content" id="mainContent">
+            <!-- HOME -->
+            <section id="home-view" class="view-section active">
+                <div class="greeting-area">
+                    <div class="greeting"><h2>Hello, <span id="userName">Student</span></h2><p>Ready to learn something new?</p></div>
+                    <div class="profile-avatar" onclick="toggleDrawer()"></div>
+                </div>
+                <div class="pc-hero">
+                    <div class="net-fit" id="heroFit">
+                      <div class="net-stage" id="heroStage" style="width:760px;height:430px;">
+                        <svg class="net-svg" width="760" height="430" viewBox="0 0 760 430">
+                            <path id="hA" class="net-base" d="M380 64 V111"/>
+                            <path id="hB" class="net-base" d="M380 159 V206"/>
+                            <path id="hC" class="net-base" d="M380 254 V305"/>
+                            <path id="hD" class="net-base" d="M380 305 H110 V356"/>
+                            <path id="hE" class="net-base" d="M380 305 V356"/>
+                            <path id="hF" class="net-base" d="M380 305 H650 V356"/>
+                            <path class="net-flow" d="M380 64 V111"/>
+                            <path class="net-flow" d="M380 159 V206"/>
+                            <path class="net-flow" d="M380 254 V305"/>
+                            <path class="net-flow" d="M380 305 H110 V356"/>
+                            <path class="net-flow" d="M380 305 V356"/>
+                            <path class="net-flow" d="M380 305 H650 V356"/>
+                            <circle class="net-joint" cx="380" cy="305" r="5"/>
+                            <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="0s"><mpath href="#hA"/></animateMotion></circle>
+                            <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-0.4s"><mpath href="#hB"/></animateMotion></circle>
+                            <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-0.8s"><mpath href="#hC"/></animateMotion></circle>
+                            <circle class="net-dot" r="3.5"><animateMotion dur="2.2s" repeatCount="indefinite" begin="-1s"><mpath href="#hD"/></animateMotion></circle>
+                            <circle class="net-dot" r="3.5"><animateMotion dur="1.4s" repeatCount="indefinite" begin="-1.2s"><mpath href="#hE"/></animateMotion></circle>
+                            <circle class="net-dot" r="3.5"><animateMotion dur="2.2s" repeatCount="indefinite" begin="-1.4s"><mpath href="#hF"/></animateMotion></circle>
+                        </svg>
+                        <div class="net-node hero-node" style="left:380px;top:40px;width:220px;"><i class="fas fa-network-wired"></i><span>SCADA System</span></div>
+                        <div class="net-node hero-node" style="left:380px;top:135px;width:200px;"><i class="fas fa-desktop"></i><span>HMI Panel</span></div>
+                        <div class="net-node hero-node plc" style="left:380px;top:230px;width:230px;"><i class="fas fa-microchip"></i><span>PLC Controller</span></div>
+                        <div class="net-node hero-node" style="left:110px;top:380px;width:180px;"><i class="fas fa-bolt"></i><span>VFD Drive</span></div>
+                        <div class="net-node hero-node" style="left:380px;top:380px;width:200px;"><i class="fas fa-cogs"></i><span>Servo Motors</span></div>
+                        <div class="net-node hero-node" style="left:650px;top:380px;width:180px;"><i class="fas fa-tint"></i><span>Hydraulics</span></div>
+                      </div>
+                    </div>
+                </div>
+                <div class="slider-wrapper">
+                    <div class="slider-track" id="sliderTrack"></div>
+                    <div class="slider-dots" id="sliderDots"></div>
+                </div>
+                <div class="home-grid">
+                    <button type="button" class="tile t-orange" onclick="switchView('paid-view')"><span class="tile-ico"><i class="fas fa-circle-play"></i></span><span class="tile-lbl">Paid Course</span></button>
+                    <button type="button" class="tile t-blue" onclick="openCategory('ebooks')"><span class="tile-ico"><i class="fas fa-book"></i></span><span class="tile-lbl">E-Books</span></button>
+                    <button type="button" class="tile t-cyan" onclick="openCategory('software')"><span class="tile-ico"><i class="fas fa-laptop-code"></i></span><span class="tile-lbl">Software</span></button>
+                    <button type="button" class="tile t-green" onclick="openCategory('study')"><span class="tile-ico"><i class="fas fa-graduation-cap"></i></span><span class="tile-lbl">Study Material</span></button>
+                    <button type="button" class="tile t-royal" onclick="openCategory('live')"><span class="tile-ico"><i class="fas fa-chalkboard-user"></i></span><span class="tile-lbl">Live Class</span></button>
+                    <button type="button" class="tile t-yellow" onclick="openCategory('test')"><span class="tile-ico"><i class="fas fa-file-pen"></i></span><span class="tile-lbl">Test Series</span></button>
+                    <button type="button" class="tile t-pink" onclick="openCategory('video')"><span class="tile-ico"><i class="fas fa-video"></i></span><span class="tile-lbl">Free Video</span></button>
+                    <button type="button" class="tile t-deep" onclick="openCategory('social')"><span class="tile-ico"><i class="fas fa-share-nodes"></i></span><span class="tile-lbl">Social Media</span></button>
+                </div>
+            </section>
+
+            <!-- PAID COURSE -->
+            <section id="paid-view" class="view-section">
+                <div class="sub-head">
+                    <button class="back-btn" onclick="switchView('home-view')"><i class="fas fa-arrow-left"></i></button>
+                    <div class="section-title"><i class="fas fa-layer-group" style="color:#0ea5e9;"></i> Paid Courses</div>
+                </div>
+                <div id="batchList" class="batch-list"></div>
+            </section>
+
+            <!-- BATCH DETAILS -->
+            <section id="batch-detail-view" class="view-section">
+                <div class="sub-head">
+                    <button class="back-btn" onclick="backFromBatch()"><i class="fas fa-arrow-left"></i></button>
+                    <div class="section-title" id="batchDetailTitle">Batch Details</div>
+                </div>
+                <div id="batchTabBody"></div>
+            </section>
+
+            <!-- FOLDER VIEW -->
+            <section id="folder-view" class="view-section">
+                <div class="sub-head">
+                    <button class="back-btn" onclick="backFromFolder()"><i class="fas fa-arrow-left"></i></button>
+                    <div class="section-title" id="folderViewTitle">Folder</div>
+                </div>
+                <div id="folderItemsList"></div>
+            </section>
+
+            <!-- CATEGORY -->
+            <section id="cat-view" class="view-section">
+                <div class="sub-head">
+                    <button class="back-btn" onclick="switchView('home-view')"><i class="fas fa-arrow-left"></i></button>
+                    <div class="section-title"><i id="catIcon" class="fas fa-folder" style="color:#0ea5e9;"></i> <span id="catTitle">Category</span></div>
+                </div>
+                <div id="catBody"></div>
+            </section>
+
+            <!-- MY COURSES -->
+            <section id="courses-view" class="view-section">
+                <div class="section-title"><i class="fas fa-play-circle" style="color:#0ea5e9;"></i> My Courses</div>
+                <div id="myCourses" class="batch-list"></div>
+            </section>
+
+            <!-- DOWNLOADS -->
+            <section id="downloads-view" class="view-section">
+                <div class="section-title"><i class="fas fa-download" style="color:#0ea5e9;"></i> Downloads</div>
+                <div class="empty-state"><i class="fas fa-folder-open"></i><h3>No Content Available</h3><p>We couldn't find any matching results</p></div>
+            </section>
+
+            <!-- CHAT -->
+            <section id="chat-view" class="view-section">
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input-area">
+                    <input id="chatInput" type="text" placeholder="Type your message here...">
+                    <i class="fas fa-paper-plane" onclick="sendChat()"></i>
+                </div>
+            </section>
+        </div>
+
+        <div class="sticky-buy-bar" id="buyBar">
+            <button class="btn-buy-main" id="btnBuyNow" onclick="initiateBuy()"><i class="fas fa-shopping-cart"></i> Buy Now</button>
+        </div>
+
+        <nav class="bottom-nav" id="bottomNav">
+            <div class="nav-item active" data-target="home-view" onclick="switchView('home-view')"><i class="fas fa-home"></i><span>Home</span></div>
+            <div class="nav-item" data-target="courses-view" onclick="switchView('courses-view')"><i class="fas fa-book-open"></i><span>My Courses</span></div>
+            <div class="nav-item" data-target="chat-view" onclick="switchView('chat-view')"><i class="far fa-comment-alt"></i><span>Chat</span></div>
+            <div class="nav-item" data-target="downloads-view" onclick="switchView('downloads-view')"><i class="fas fa-download"></i><span>Downloads</span></div>
+            <div class="nav-item" onclick="window.open('https://wa.me/916202320527','_blank')"><i class="fab fa-whatsapp"></i><span>Whatsapp</span></div>
+        </nav>
+
+        <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+        <div class="drawer" id="drawer">
+            <div class="drawer-profile">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Profile">
+                <h2 id="drawerName">Student</h2>
+                <p style="font-size:12px;color:#94a3b8;" id="drawerEmail">student@email.com</p>
+            </div>
+            <ul class="drawer-menu">
+                <li onclick="switchView('home-view'); toggleDrawer();"><i class="fas fa-home"></i> Home</li>
+                <li onclick="switchView('courses-view'); toggleDrawer();"><i class="fas fa-book-open"></i> My Courses</li>
+                <li onclick="switchView('chat-view'); toggleDrawer();"><i class="far fa-comment-alt"></i> Chat</li>
+                <li onclick="switchView('downloads-view'); toggleDrawer();"><i class="fas fa-download"></i> Downloads</li>
+                <li onclick="toast('Settings coming soon');"><i class="fas fa-cog"></i> Settings</li>
+                <li onclick="logout()" style="color:#ef4444;"><i class="fas fa-sign-out-alt" style="color:#ef4444;"></i> Logout</li>
+            </ul>
+            <div class="drawer-footer">
+                <p>Follow us</p>
+                <i class="fab fa-whatsapp" onclick="window.open('https://wa.me/916202320527','_blank')"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL (Upgraded) -->
+    <div id="admin-screen">
+        <header class="admin-header">
+            <div class="header-left">
+                <span class="admin-chip"><i class="fas fa-user-shield"></i> ADMIN PANEL</span>
+            </div>
+            <i class="fas fa-sign-out-alt bell-icon" onclick="logout()" title="Logout"></i>
+        </header>
+        <div class="admin-tabs">
+            <div class="admin-tab active" data-tab="batches" onclick="adminTab('batches')"><i class="fas fa-layer-group"></i> Batches</div>
+            <div class="admin-tab" data-tab="chats" onclick="adminTab('chats')"><i class="fas fa-comments"></i> Chats</div>
+            <div class="admin-tab" data-tab="payments" onclick="adminTab('payments')"><i class="fas fa-rupee-sign"></i> Payments</div>
+            <div class="admin-tab" data-tab="students" onclick="adminTab('students')"><i class="fas fa-users"></i> Students</div>
+            <div class="admin-tab" data-tab="content" onclick="adminTab('content')"><i class="fas fa-cog"></i> App Settings</div>
+            <div class="admin-tab" data-tab="store" onclick="adminTab('store')"><i class="fas fa-store"></i> Store</div>
+        </div>
+        <div class="admin-content" id="adminContent">
+            <div id="admin-batches" class="admin-pane active"></div>
+            <div id="admin-chats" class="admin-pane"></div>
+            <div id="admin-payments" class="admin-pane"></div>
+            <div id="admin-students" class="admin-pane"></div>
+            <div id="admin-content-tab" class="admin-pane"></div>
+            <div id="admin-store" class="admin-pane"></div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="app-modal">
+        <div class="modal-header">
+            <button class="back-btn" onclick="closeModal()"><i class="fas fa-arrow-left"></i></button>
+            <h2 id="modal-title">Title</h2>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+
+    <!-- PAYMENT OVERLAY -->
+    <div class="pay-overlay" id="payOverlay">
+        <div class="pay-sheet" id="paySheet">
+            <div class="pay-head">
+                <span><i class="fas fa-lock" style="color:#10b981;"></i> Secure Payment</span>
+                <i class="fas fa-times pay-close" onclick="closePayment()"></i>
+            </div>
+            <div id="payContent"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js"></script>
+
+<script>
+/* ================= CONFIG ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBeZl52HEWGz-vE72QZ5taznvpYTfq3QUk",
+  authDomain: "login-and-reg-5728d.firebaseapp.com",
+  projectId: "login-and-reg-5728d",
+  storageBucket: "login-and-reg-5728d.firebasestorage.app",
+  messagingSenderId: "435846403197",
+  appId: "1:435846403197:web:d6a05a55e40839d15dcd14"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(e) {}
+const PHONE_DOMAIN = '@phone.gyanautomation.app';
+
+let state = { user: null, isAdmin: false, profile: null, batches: [], myPurchases: [], currentBatch: null, currentTab: 'overview', currentFolderTitle: '', paymentMethod: 'upi', processing: false, adminCurrentBatchId: null };
+const $ = id => document.getElementById(id);
+let SLIDER_IMAGES = [
+    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgqlqupKpBStr-OjLdXyvxu2YpLUtmPGY6mYUQh8icare5CLaK9t70ZV_OIpyEfLfn4HevCZGHe3EFxnTZIOjA8HQ3kNoxwzARrtaYjF_PqqOLBvqKzPHvV08EwJDwrrNaYsC3o8HwXcGvjGCJ2b3EcKLnXkZBiulQ5zsNUH1AJGkcTqr-l1RLkqQKFDAJx/s853/im%201%20.gif",
+    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgwFfIrlUQv4QJH0iqy8rJyHRZZhpTYXbDhTycz8DWUHgiLStkFJIWRZuvkqadKCLp-5wYpbQ897LJQBpNnCqa-dxwpyMH8NpPmc32OQJaIrdEesvLTTcNvp2_WqI42YyRANPZfHIkXWerLMF78CHADDTfAC59SwAK3oR2e1Gi6R_qZBQRKivhuVjlBd-Y9/s853/Presentation2.gif"
+];
+
+/* ================= UTILS ================= */
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(window._toastTimer); window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000); }
+function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtPrice(n) { return Number(n) === 0 ? 'FREE' : '₹ ' + Number(n).toLocaleString('en-IN'); }
+function toAuthEmail(val) { val = val.trim().toLowerCase(); if(val.includes('@')) return val; const d = val.replace(/\D/g, ''); return d.length >= 10 ? d.slice(-10) + PHONE_DOMAIN : null; }
+function openModal(title, bodyHtml) { $('modal-title').textContent = title; $('modal-body').innerHTML = bodyHtml; $('app-modal').classList.add('active'); }
+function closeModal() { $('app-modal').classList.remove('active'); if(window.player) { window.player.destroy(); window.player = null; } }
+function toggleDrawer() { $('drawer').classList.toggle('active'); $('drawerOverlay').classList.toggle('active'); }
+
+/* ================= APP CONFIG (LOGO & SLIDER) ================= */
+function loadAppConfig() {
+    db.collection('config').doc('app').onSnapshot(doc => {
+        if(!doc.exists) return;
+        const data = doc.data();
+        if(data.logoUrl) {
+            $('loginLogoIcon').style.display = 'none';
+            $('loginLogoImg').src = data.logoUrl;
+            $('loginLogoImg').style.display = 'block';
+            const sl = $('splashLogo'); if(sl) { sl.src = data.logoUrl; sl.style.display = 'block'; const si = document.querySelector('.sp-logo i'); if(si) si.style.display = 'none'; }
+        } else {
+            $('loginLogoIcon').style.display = 'block';
+            $('loginLogoImg').style.display = 'none';
+        }
+        const raw = Array.isArray(data.sliderSlots) ? data.sliderSlots : (data.sliderImages || []);
+        const slides = raw.filter(Boolean);
+        if(slides.length) { SLIDER_IMAGES = slides; initSlider(); }
+    }, err => console.warn('config', err));
+}
+
+function fitNet() {
+    const fit = $('netFit'), st = $('netStage');
+    if(!fit || !st || !fit.parentElement) return;
+    const col = fit.parentElement, scr = $('auth-screen');
+    const availW = col.clientWidth; if(!availW) return;
+    const head = col.querySelector('h1').offsetHeight + col.querySelector('p').offsetHeight + 50;
+    const availH = scr.clientHeight - 60 - head;
+    const sc = Math.max(0.55, Math.min(1, availW / 620, availH / 440));
+    st.style.transform = 'scale(' + sc + ')';
+    fit.style.width = (620 * sc) + 'px';
+    fit.style.height = (440 * sc) + 'px';
+}
+window.addEventListener('resize', fitNet);
+function fitHero() {
+    const fit = $('heroFit'), st = $('heroStage');
+    if(!fit || !st) return;
+    const w = fit.parentElement.clientWidth - 40;
+    if(w <= 0) return;
+    const sc = Math.min(1.15, w / 760);
+    st.style.transform = 'scale(' + sc + ')';
+    fit.style.width = (760 * sc) + 'px';
+    fit.style.height = (430 * sc) + 'px';
+}
+window.addEventListener('resize', fitHero);
+function fitIntro() {
+    const fit = $('introFit'), st = $('introStage'); if(!fit || !st) return;
+    const sc = Math.max(0.6, Math.min(1, (window.innerWidth - 32) / 340, (window.innerHeight - 190) / 430));
+    st.style.transform = 'scale(' + sc + ')';
+    fit.style.width = (340 * sc) + 'px'; fit.style.height = (430 * sc) + 'px';
+}
+window.addEventListener('resize', fitIntro);
+
+function runIntro() {
+    const el = $('intro'); if(!el) return;
+    if(window.innerWidth >= 900) { el.remove(); return; }   // desktop: animation already on login page
+    fitIntro();
+    [[300,'Initializing SCADA...'],[1300,'Connecting HMI panel...'],[2100,'Linking PLC controller...'],[2900,'Wiring VFD, Servo & Hydraulics...'],[4100,'System online \u2713']]
+        .forEach(([t, msg]) => setTimeout(() => { const st = $('introStatus'); if(st) st.textContent = msg; }, t));
+    const t0 = Date.now(); let skipped = false;
+    el.addEventListener('click', () => { if(Date.now() - t0 > 1200) skipped = true; });
+    const iv = setInterval(() => {
+        const minOk = skipped || (Date.now() - t0 >= 5400);
+        const authOk = window._authReady || (Date.now() - t0 > 9000);   // login/home decide hone ka wait
+        if(minOk && authOk) { clearInterval(iv); el.classList.add('hide'); setTimeout(() => el.remove(), 800); }
+    }, 100);
+}
+
+
+/* ================= AUTH ================= */
+function switchAuthTab(type) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    if(type === 'login') {
+        document.querySelectorAll('.auth-tab')[0].classList.add('active');
+        $('login-form').style.display = 'block'; $('register-form').style.display = 'none';
+        document.querySelector('.auth-tabs').dataset.active = 'login';
+    } else {
+        document.querySelectorAll('.auth-tab')[1].classList.add('active');
+        $('login-form').style.display = 'none'; $('register-form').style.display = 'block';
+        document.querySelector('.auth-tabs').dataset.active = 'register';
+    }
+}
+
+async function doLogin(e) {
+    e.preventDefault();
+    const id = $('loginId').value; const pass = $('loginPass').value;
+    const email = toAuthEmail(id);
+    if(!email) return toast('Enter valid email/phone');
+    $('loginBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; $('loginBtn').disabled = true;
+    try { await auth.signInWithEmailAndPassword(email, pass); }
+    catch(err) { toast(err.message); $('loginBtn').innerHTML = 'Login <i class="fas fa-arrow-right"></i>'; $('loginBtn').disabled = false; }
+}
+
+async function doRegister(e) {
+    e.preventDefault();
+    const name = $('regName').value; const id = $('regEmail').value; const pass = $('regPass').value;
+    const email = toAuthEmail(id);
+    if(!email) return toast('Enter valid email/phone');
+    if(pass.length < 6) return toast('Password must be 6+ chars');
+    $('regBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...'; $('regBtn').disabled = true;
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        await db.collection('users').doc(cred.user.uid).set({ name, email, phone: id.includes('@') ? '' : id, joined: Date.now() });
+        toast('Account created successfully!');
+    } catch(err) { toast(err.message); $('regBtn').innerHTML = 'Create Account <i class="fas fa-user-plus"></i>'; $('regBtn').disabled = false; }
+}
+
+async function resetPassword() {
+    const id = $('loginId').value;
+    const email = toAuthEmail(id);
+    if(!email) return toast('Enter your email/phone first');
+    try { await auth.sendPasswordResetEmail(email); toast('Reset link sent to your email!'); }
+    catch(e) { toast(e.message); }
+}
+
+function logout() { stopAdminChat(); if(window._unsubChat) { window._unsubChat(); window._unsubChat = null; } auth.signOut(); }
+
+let _authNullTimer = null, _loadedUid = null, _firstAuth = true;
+function showLoginScreen() {
+    state.user = null; state.isAdmin = false; _loadedUid = null;
+    $('auth-screen').classList.remove('hide');
+    $('app-screen').classList.remove('active');
+    $('admin-screen').classList.remove('active');
+    $('loginBtn').innerHTML = 'Login <i class="fas fa-arrow-right"></i>'; $('loginBtn').disabled = false;
+    $('regBtn').innerHTML = 'Create Account <i class="fas fa-user-plus"></i>'; $('regBtn').disabled = false;
+}
+auth.onAuthStateChanged(async user => {
+    clearTimeout(_authNullTimer);
+    const firstEvent = _firstAuth; _firstAuth = false;
+    if(user) {
+        state.user = user;
+        if(_loadedUid === user.uid) return; // same session, do not reload / re-render
+        _loadedUid = user.uid;
+        try { const adminDoc = await db.collection('admins').doc(user.uid).get(); state.isAdmin = adminDoc.exists; }
+        catch(e) { console.warn('admin check', e); state.isAdmin = false; }
+        if(state.isAdmin) {
+            $('auth-screen').classList.add('hide');
+            $('app-screen').classList.remove('active');
+            $('admin-screen').classList.add('active');
+            adminTab('batches');
+        } else {
+            $('auth-screen').classList.add('hide');
+            $('admin-screen').classList.remove('active');
+            $('app-screen').classList.add('active');
+            loadStudentData();
+        }
+        window._authReady = true;
+    } else {
+        if(firstEvent) { showLoginScreen(); window._authReady = true; }   // app khulte hi pata chal gaya: login nahi hai
+        else _authNullTimer = setTimeout(() => { if(!auth.currentUser) showLoginScreen(); }, 2500);   // temporary null ignore
+    }
+});
+
+/* ================= STUDENT APP ================= */
+let unsubBatches, unsubPurchases;
+
+async function loadStudentData() {
+    if(unsubBatches) unsubBatches(); if(unsubPurchases) unsubPurchases();
+
+    let uDoc = { exists: false };
+    try { uDoc = await db.collection('users').doc(state.user.uid).get(); } catch(e) { console.warn('profile', e); }
+    if(uDoc.exists) {
+        state.profile = uDoc.data();
+        $('userName').textContent = state.profile.name || 'Student';
+        $('drawerName').textContent = state.profile.name || 'Student';
+        $('drawerEmail').textContent = state.profile.email || state.user.email;
+    }
+
+    unsubBatches = db.collection('batches').orderBy('createdAt', 'desc').onSnapshot(snap => {
+        state.batches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderBatches();
+        renderMyCourses();
+        refreshCurrent();
+    }, err => console.warn('batches', err));
+
+    unsubPurchases = db.collection('users').doc(state.user.uid).collection('purchases').onSnapshot(snap => {
+        state.myPurchases = snap.docs.map(d => d.data());
+        renderBatches();
+        renderMyCourses();
+        refreshCurrent();
+    }, err => console.warn('purchases', err));
+
+    switchView('home-view');
+    initSlider();
+    loadChat();
+}
+
+function initSlider() {
+    const track = $('sliderTrack'), dots = $('sliderDots'); if(!track) return;
+    track.innerHTML = SLIDER_IMAGES.map(src => `<img class="slide-img" src="${esc(src)}" alt="">`).join('');
+    dots.innerHTML = SLIDER_IMAGES.map((_, i) => `<span class="dot${i === 0 ? ' active' : ''}" onclick="goSlide(${i})"></span>`).join('');
+    window._slideIdx = 0; track.style.transform = 'translateX(0)';
+    clearInterval(window._sliderTimer);
+    if(SLIDER_IMAGES.length > 1) window._sliderTimer = setInterval(() => goSlide((window._slideIdx + 1) % SLIDER_IMAGES.length), 3500);
+}
+function goSlide(i) {
+    window._slideIdx = i;
+    $('sliderTrack').style.transform = `translateX(-${i * 100}%)`;
+    document.querySelectorAll('#sliderDots .dot').forEach((d, k) => d.classList.toggle('active', k === i));
+}
+
+function switchView(viewId) {
+    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+    $(viewId).classList.add('active');
+    $('buyBar').classList.remove('active');
+    $('bottomNav').classList.remove('hide');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.target === viewId));
+
+    const titles = { 'home-view':'Gyan Automation', 'paid-view':'Paid Courses', 'batch-detail-view': (state.currentBatch ? state.currentBatch.title : 'Batch Details'), 'folder-view': state.currentFolderTitle || 'Folder', 'cat-view':'Category', 'courses-view':'My Courses', 'downloads-view':'Downloads', 'chat-view':'Chat' };
+    $('appHeaderTitle').textContent = titles[viewId] || 'Gyan Automation';
+    $('mainContent').scrollTop = 0;
+    setTimeout(fitHero, 30);
+}
+
+function renderBatches() {
+    const box = $('batchList'); if(!box) return;
+    const courses = state.batches.filter(b => !b.kind);
+    if(courses.length === 0) { box.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>No Courses Available</h3><p>Check back later for new batches</p></div>'; return; }
+    box.innerHTML = courses.map(b => {
+        const img = b.image || SLIDER_IMAGES[0];
+        const isNew = b.createdAt > Date.now() - 86400000*7;
+        const owned = isPurchased(b.id);
+        return `<div class="batch-card" onclick="openBatchDetails('${b.id}')">
+            <div class="batch-img" style="background-image:url('${esc(img)}')">
+                ${Number(b.price) === 0 ? '<div class="ribbon free">FREE</div>' : (isNew ? '<div class="ribbon new">NEW</div>' : '')}
+            </div>
+            <div class="batch-body">
+                <div class="batch-title">${esc(b.title)}</div>
+                <div class="batch-meta"><i class="far fa-clock"></i> ${b.days || 365} Days Validity</div>
+                ${b.desc ? `<div class="batch-desc">${esc(b.desc)}</div>` : ''}
+                <div class="batch-foot">
+                    <div class="batch-price">${fmtPrice(b.price)}</div>
+                    ${owned 
+                        ? `<button class="btn-buy owned" onclick="event.stopPropagation();openBatchDetails('${b.id}')"><i class="fas fa-play-circle"></i> Open</button>`
+                        : `<button class="btn-buy" onclick="event.stopPropagation();openBatchDetails('${b.id}')">View Details</button>`}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderMyCourses() {
+    const box = $('myCourses'); if(!box) return;
+    const owned = state.batches.filter(b => isPurchased(b.id));
+    if(owned.length === 0) { box.innerHTML = '<div class="empty-state"><i class="fas fa-book-open"></i><h3>No Courses Yet</h3><p>Purchase a batch to start learning</p></div>'; return; }
+    box.innerHTML = owned.map(b => {
+        const p = state.myPurchases.find(p => p.batchId === b.id);
+        const exp = p ? p.expiry : 0;
+        const isExp = exp < Date.now();
+        return `<div class="course-card" onclick="openBatchDetails('${b.id}')">
+            <div class="course-image" style="background-image:url('${esc(b.image || SLIDER_IMAGES[0])}')"></div>
+            <div class="course-details">
+                <div class="course-title">${esc(b.title)}</div>
+                <div class="course-expiry">
+                    <i class="far fa-calendar"></i> Expires: ${exp ? new Date(exp).toLocaleDateString('en-IN') : 'N/A'}
+                    <span class="status ${isExp ? 'exp' : 'ok'}">${isExp ? 'EXPIRED' : 'ACTIVE'}</span>
+                </div>
+                <button class="btn-view" onclick="event.stopPropagation();openBatchDetails('${b.id}')"><i class="fas fa-play"></i> Continue Learning</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function isPurchased(batchId) { return state.myPurchases.some(p => p.batchId === batchId && p.expiry > Date.now()); }
+
+let allCurrentItems = [];
+
+function openBatchDetails(batchId) {
+    const nb = state.batches.find(b => b.id === batchId);
+    if(!nb) return;
+    const cur = document.querySelector('.view-section.active');
+    if(cur && cur.id !== 'batch-detail-view' && cur.id !== 'folder-view') state.prevView = cur.id;
+    if(!state.currentBatch || state.currentBatch.id !== nb.id) allCurrentItems = [];
+    state.currentBatch = nb;
+    $('batchTabBody').dataset.batch = '';
+    switchView('batch-detail-view');
+    $('batchDetailTitle').textContent = nb.title;
+    renderBatchDetails();
+}
+function backFromBatch() { switchView(state.prevView || 'paid-view'); }
+function switchBatchTab() { renderBatchDetails(); }
+
+function cacheItems(list) {
+    list.forEach(i => { const k = allCurrentItems.findIndex(x => x.id === i.id); if(k >= 0) allCurrentItems[k] = i; else allCurrentItems.push(i); });
+}
+
+function updateBuyBar(b, purchased) {
+    const bar = $('buyBar'), nav = $('bottomNav'), btn = $('btnBuyNow');
+    if(purchased) { bar.classList.remove('active'); nav.classList.remove('hide'); return; }
+    bar.classList.add('active'); nav.classList.add('hide');
+    btn.innerHTML = Number(b.price) === 0 ? '<i class="fas fa-gift"></i> Enroll Free' : `<i class="fas fa-shopping-cart"></i> Buy Now &bull; ${fmtPrice(b.price)}`;
+    btn.onclick = () => initiateBuy();
+}
+
+function refreshCurrent() {
+    if(!state.currentBatch) return;
+    if($('folder-view').classList.contains('active') && state.currentFolderId) openFolder(state.currentFolderId, state.currentFolderTitle, true);
+    else if($('batch-detail-view').classList.contains('active')) renderBatchDetails();
+}
+
+function renderBatchDetails() {
+    const b = state.currentBatch; if(!b) return;
+    const body = $('batchTabBody');
+    const purchased = isPurchased(b.id);
+    updateBuyBar(b, purchased);
+    if(body.dataset.batch !== b.id) {
+        body.innerHTML = '<div style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i></div>';
+        body.dataset.batch = b.id;
+    }
+    db.collection('batches').doc(b.id).collection('items').where('parent', '==', 'root').get().then(snap => {
+        if(!state.currentBatch || state.currentBatch.id !== b.id) return;
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        items.sort((x, y) => (x.createdAt || 0) - (y.createdAt || 0));
+        cacheItems(items);
+        if(items.length === 0) { body.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:30px;">No content added yet.</p>'; return; }
+        body.innerHTML = items.map(i => renderItemCard(i, isPurchased(b.id))).join('');
+    }).catch(err => {
+        console.warn('items', err);
+        body.innerHTML = '<p style="text-align:center;color:#ef4444;padding:30px;">Content load nahi ho paya. Internet check karein ya thodi der baad try karein.</p>';
+    });
+}
+
+function renderItemCard(item, purchased) {
+    if(item.type === 'folder') {
+        return `<div class="folder-card" onclick="openFolder('${item.id}', '${esc(item.title).replace(/'/g,"\\'")}')">
+            <div class="folder-icon"><i class="fas fa-folder"></i></div>
+            <div class="folder-title">${esc(item.title)}<div class="folder-meta">Tap to open folder</div></div>
+            <i class="fas fa-chevron-right" style="color:#94a3b8; margin-left:auto;"></i>
+        </div>`;
+    }
+    const icon = item.type === 'pdf' ? 'fa-file-pdf' : (item.type === 'live' ? 'fa-tower-broadcast' : 'fa-play');
+    const isFree = item.access === 'free';
+    if(!isFree && !purchased) {
+        return `<div class="video-card" style="opacity:0.75;" onclick="toast('Ye content paid hai. Batch kharidne par unlock hoga.')">
+            <div class="video-thumb"><div class="video-play-btn"><i class="fas fa-lock"></i></div></div>
+            <div class="video-info">
+                <div class="video-title">${esc(item.title)}</div>
+                <button class="btn-watch" onclick="event.stopPropagation();toast('Ye content paid hai. Batch kharidne par unlock hoga.')"><i class="fas fa-lock"></i> Locked</button>
+            </div>
+        </div>`;
+    }
+    return `<div class="video-card" onclick="playVideoFromDetails('${item.id}')">
+        <div class="video-thumb">
+            <div class="video-play-btn"><i class="fas ${icon}"></i></div>
+            ${isFree ? '<div style="position:absolute;top:-6px;right:-6px;background:#10b981;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">FREE</div>' : ''}
+        </div>
+        <div class="video-info">
+            <div class="video-title">${esc(item.title)}</div>
+            <button class="btn-watch" onclick="event.stopPropagation();playVideoFromDetails('${item.id}')"><i class="fas fa-play"></i> ${item.type === 'pdf' ? 'View PDF' : (item.type === 'live' ? 'Join Live' : 'Watch')}</button>
+        </div>
+    </div>`;
+}
+
+function openFolder(folderId, title, silent) {
+    state.currentFolderId = folderId;
+    state.currentFolderTitle = title;
+    const b = state.currentBatch; if(!b) return;
+    const box = $('folderItemsList');
+    if(!silent) {
+        switchView('folder-view'); $('folderViewTitle').textContent = title;
+        box.innerHTML = '<div style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin"></i></div>';
+    }
+    updateBuyBar(b, isPurchased(b.id));
+    db.collection('batches').doc(b.id).collection('items').where('parent', '==', folderId).get().then(snap => {
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        items.sort((x, y) => (x.createdAt || 0) - (y.createdAt || 0));
+        cacheItems(items);
+        if(items.length === 0) { box.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">Folder is empty.</p>'; return; }
+        const purchased = isPurchased(b.id);
+        box.innerHTML = items.map(i => renderItemCard(i, purchased)).join('');
+    }).catch(err => {
+        console.warn('folder', err);
+        box.innerHTML = '<p style="text-align:center;color:#ef4444;padding:20px;">Folder load nahi ho paya.</p>';
+    });
+}
+
+function backFromFolder() { state.currentFolderId = null; switchView('batch-detail-view'); $('batchDetailTitle').textContent = state.currentBatch.title; renderBatchDetails(); }
+
+function playVideoFromDetails(itemId) {
+    const item = allCurrentItems.find(x => x.id === itemId);
+    if(!item) return;
+    $('modal-body').style.padding = '0'; $('modal-body').style.overflow = 'hidden'; $('modal-body').style.height = '100%';
+
+    if(item.type === 'live') {
+        const room = item.url ? item.url.split('/').pop() : 'ga-live';
+        openModal(item.title, `<iframe src="https://meet.jit.si/${room}" style="width:100%;height:100%;border:0;" allow="camera;microphone"></iframe>`); return;
+    }
+    let html = '';
+    if(item.url && (item.url.includes('youtube.com') || item.url.includes('youtu.be'))) {
+        const vid = item.url.split('v=')[1] || item.url.split('/').pop();
+        html = `<div id="player" data-plyr-provider="youtube" data-plyr-embed-id="${vid}" style="width:100%; height:100%;"></div>`;
+    } else if(item.type === 'pdf') {
+        html = `<iframe src="${item.url}" style="width:100%;height:100%;border:0;"></iframe>`;
+    } else {
+        html = `<video id="player" playsinline controls style="width:100%; height:100%;"><source src="${item.url}" type="video/mp4" /></video>`;
+    }
+    openModal(item.title, html);
+    if(item.type !== 'pdf') setTimeout(() => { if(window.Plyr) window.player = new Plyr('#player'); }, 100);
+}
+
+/* ================= PAYMENT GATEWAY ================= */
+function initiateBuy() {
+    const b = state.currentBatch;
+    if(!b) return;
+    if(b.price === 0) {
+        db.collection('users').doc(state.user.uid).collection('purchases').doc(b.id).set({ batchId: b.id, purchasedAt: Date.now(), expiry: Date.now() + ((b.days || 365) * 86400000) })
+            .then(() => { toast('Enrolled successfully!'); refreshCurrent(); });
+        return;
+    }
+    state.paymentMethod = 'upi';
+    openPayment();
+}
+
+function openPayment() {
+    const b = state.currentBatch;
+    $('payOverlay').classList.add('active');
+    $('payContent').innerHTML = `
+        <div class="pay-amount">${fmtPrice(b.price)}</div>
+        <div class="pay-batch">${esc(b.title)}</div>
+        <div class="pay-methods">
+            <div class="pay-method active" data-method="upi" onclick="selectPayMethod('upi')"><i class="fas fa-mobile-alt"></i> UPI</div>
+            <div class="pay-method" data-method="card" onclick="selectPayMethod('card')"><i class="fas fa-credit-card"></i> Card</div>
+            <div class="pay-method" data-method="netbanking" onclick="selectPayMethod('netbanking')"><i class="fas fa-university"></i> NetBanking</div>
+        </div>
+        <div id="payPanel"></div>
+        <button class="pay-btn" id="payBtn" onclick="processPayment()"><i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}</button>
+        <div class="pay-secure"><i class="fas fa-shield-alt"></i> 100% Secure Payment • 256-bit SSL Encrypted</div>
+    `;
+    renderPayPanel();
+}
+
+function selectPayMethod(m) {
+    state.paymentMethod = m;
+    document.querySelectorAll('.pay-method').forEach(el => el.classList.toggle('active', el.dataset.method === m));
+    renderPayPanel();
+}
+
+function renderPayPanel() {
+    const b = state.currentBatch;
+    const panel = $('payPanel'); if(!panel) return;
+    if(state.paymentMethod === 'upi') {
+        panel.innerHTML = `
+            <div class="pay-panel">
+                <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:8px;">Pay to UPI ID</label>
+                <div style="background:#f8fafc;padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;border:1px solid #eef2f5;">
+                    <span style="font-weight:600;font-size:14px;">gyanautomation@upi</span>
+                    <button style="border:none;background:#0ea5e9;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;" onclick="navigator.clipboard.writeText('gyanautomation@upi'); toast('UPI ID Copied!')"><i class="fas fa-copy"></i> Copy</button>
+                </div>
+                <p class="pay-note"><i class="fas fa-info-circle"></i> Pay via any UPI app and enter the UTR/Ref number below</p>
+                <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin:14px 0 8px;">UTR / Reference Number</label>
+                <input type="text" id="utrInput" class="f-input" placeholder="e.g. 123456789012" style="margin-bottom:0;">
+            </div>
+        `;
+    } else if(state.paymentMethod === 'card') {
+        panel.innerHTML = `
+            <div class="pay-panel">
+                <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:8px;">Card Number</label>
+                <input type="text" class="f-input" placeholder="1234 5678 9012 3456" maxlength="19">
+                <div class="f-row" style="margin-bottom:0;">
+                    <div><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:8px;">Expiry</label><input type="text" class="f-input" placeholder="MM/YY" maxlength="5"></div>
+                    <div><label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:8px;">CVV</label><input type="password" class="f-input" placeholder="•••" maxlength="4"></div>
+                </div>
+                <p class="pay-note"><i class="fas fa-info-circle"></i> Card payments coming soon. Use UPI for now.</p>
+            </div>
+        `;
+    } else {
+        panel.innerHTML = `
+            <div class="pay-panel">
+                <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:8px;">Select Bank</label>
+                <select class="f-input" style="margin-bottom:0;">
+                    <option>State Bank of India</option>
+                    <option>HDFC Bank</option>
+                    <option>ICICI Bank</option>
+                    <option>Axis Bank</option>
+                    <option>Punjab National Bank</option>
+                </select>
+                <p class="pay-note"><i class="fas fa-info-circle"></i> NetBanking coming soon. Use UPI for now.</p>
+            </div>
+        `;
+    }
+}
+
+function closePayment() {
+    if(state.processing) return;
+    $('payOverlay').classList.remove('active');
+}
+
+async function processPayment() {
+    if(state.processing) return;
+    const b = state.currentBatch;
+    const btn = $('payBtn');
+    
+    if(state.paymentMethod === 'upi') {
+        const utr = $('utrInput') ? $('utrInput').value.trim() : '';
+        if(utr.length < 6) return toast('Please enter valid UTR number (min 6 digits)');
+        state.processing = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying Payment...'; btn.disabled = true;
+        try {
+            const userName = (state.profile && state.profile.name) ? state.profile.name : state.user.email.split('@')[0];
+            await db.collection('payRequests').add({ uid: state.user.uid, userName, batchId: b.id, title: b.title, amount: b.price, utr, status: 'pending', createdAt: Date.now() });
+            $('payContent').innerHTML = `
+                <div class="pay-success">
+                    <div class="success-check"><i class="fas fa-check"></i></div>
+                    <h3>Payment Submitted!</h3>
+                    <p>Your payment request has been sent to admin for verification. You'll get access shortly.</p>
+                    <div class="pay-receipt">UTR: ${esc(utr)}</div>
+                    <br><br>
+                    <button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Done</button>
+                </div>
+            `;
+            state.processing = false;
+            setTimeout(() => { $('payOverlay').classList.remove('active'); refreshCurrent(); }, 2500);
+        } catch(e) {
+            toast('Error: ' + e.message);
+            btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false;
+            state.processing = false;
+        }
+    } else {
+        toast('This method is coming soon. Please use UPI.');
+    }
+}
+
+/* ================= CATEGORY ================= */
+function openCategory(key) {
+    const body = $('catBody');
+    const titles = { ebooks:'E-Books', software:'Software', study:'Study Material', live:'Live Class', test:'Test Series', video:'Free Video', social:'Social Media' };
+    const icons = { ebooks:'fa-book', software:'fa-laptop-code', study:'fa-graduation-cap', live:'fa-chalkboard-user', test:'fa-file-pen', video:'fa-video', social:'fa-share-nodes' };
+    $('catTitle').textContent = titles[key] || 'Category';
+    $('catIcon').className = 'fas ' + (icons[key] || 'fa-folder');
+
+    if(key === 'ebooks' || key === 'software') {
+        const L = state.batches.filter(b => b.kind === key);
+        if(!L.length) {
+            body.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>Coming Soon</h3><p>Content will be available here soon</p></div>';
+        } else {
+            body.innerHTML = L.map(b => {
+                const own = isPurchased(b.id);
+                return `<div class="batch-card" style="margin-bottom:16px;" onclick="openBatchDetails('${b.id}')">
+                    <div class="batch-img" style="background-image:url('${esc(b.image || SLIDER_IMAGES[0])}')"></div>
+                    <div class="batch-body">
+                        <div class="batch-title">${esc(b.title)}</div>
+                        ${b.desc ? `<div class="batch-desc">${esc(b.desc)}</div>` : ''}
+                        <div class="batch-foot">
+                            <div class="batch-price">${fmtPrice(b.price)}</div>
+                            ${own 
+                                ? `<button class="btn-buy owned" onclick="event.stopPropagation();openBatchDetails('${b.id}')"><i class="fas fa-play-circle"></i> Open</button>`
+                                : `<button class="btn-buy" onclick="event.stopPropagation();openBatchDetails('${b.id}')">${Number(b.price) === 0 ? 'Get Free' : 'Buy Now'}</button>`}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    } else if(key === 'social') {
+        body.innerHTML = `
+            <div class="link-list" style="display:flex;flex-direction:column;gap:12px;">
+                <a class="link-item" href="https://wa.me/916202320527" target="_blank" style="text-decoration:none;display:flex;align-items:center;gap:16px;background:#fff;padding:16px;border-radius:12px;box-shadow:var(--shadow);color:var(--text-dark);"><div class="link-ico" style="width:44px;height:44px;border-radius:12px;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="fab fa-whatsapp"></i></div><div class="link-name" style="flex:1;font-weight:600;">WhatsApp</div><i class="fas fa-chevron-right" style="color:#cbd5e1;"></i></a>
+                <a class="link-item" href="https://youtube.com" target="_blank" style="text-decoration:none;display:flex;align-items:center;gap:16px;background:#fff;padding:16px;border-radius:12px;box-shadow:var(--shadow);color:var(--text-dark);"><div class="link-ico" style="width:44px;height:44px;border-radius:12px;background:#ff0000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="fab fa-youtube"></i></div><div class="link-name" style="flex:1;font-weight:600;">YouTube</div><i class="fas fa-chevron-right" style="color:#cbd5e1;"></i></a>
+                <a class="link-item" href="https://instagram.com" target="_blank" style="text-decoration:none;display:flex;align-items:center;gap:16px;background:#fff;padding:16px;border-radius:12px;box-shadow:var(--shadow);color:var(--text-dark);"><div class="link-ico" style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="fab fa-instagram"></i></div><div class="link-name" style="flex:1;font-weight:600;">Instagram</div><i class="fas fa-chevron-right" style="color:#cbd5e1;"></i></a>
+                <a class="link-item" href="https://t.me" target="_blank" style="text-decoration:none;display:flex;align-items:center;gap:16px;background:#fff;padding:16px;border-radius:12px;box-shadow:var(--shadow);color:var(--text-dark);"><div class="link-ico" style="width:44px;height:44px;border-radius:12px;background:#0088cc;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;"><i class="fab fa-telegram"></i></div><div class="link-name" style="flex:1;font-weight:600;">Telegram</div><i class="fas fa-chevron-right" style="color:#cbd5e1;"></i></a>
+            </div>
+        `;
+    } else {
+        body.innerHTML = `<div class="empty-state"><i class="fas fa-folder-open"></i><h3>Coming Soon</h3><p>${titles[key]} will be available soon</p></div>`;
+    }
+    switchView('cat-view');
+}
+
+/* ================= CHAT ================= */
+function loadChat() {
+    if(!state.user) return;
+    if(window._unsubChat) window._unsubChat();
+    window._unsubChat = db.collection('chats').doc(state.user.uid).collection('messages').orderBy('ts', 'asc').onSnapshot(snap => {
+        const msgs = snap.docs.map(d => d.data());
+        const box = $('chatMessages');
+        if(msgs.length === 0) {
+            box.innerHTML = '<div class="chat-empty"><i class="far fa-comment-alt"></i><p>No messages yet. Start a conversation!</p></div>';
+            return;
+        }
+        box.innerHTML = msgs.map(m => `
+            <div class="msg ${m.from === 'user' ? 'me' : 'them'}">
+                <div class="bubble">${esc(m.text)}</div>
+                <div class="msg-time">${new Date(m.ts).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+async function sendChat() {
+    const input = $('chatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    input.value = '';
+    const ts = Date.now();
+    try {
+        await db.collection('chats').doc(state.user.uid).set({ uid: state.user.uid, name: (state.profile && state.profile.name) || '', lastText: text, lastTs: ts, lastFrom: 'user' }, { merge: true });
+        await db.collection('chats').doc(state.user.uid).collection('messages').add({ from: 'user', text, ts });
+    } catch(e) { toast(e.message); }
+}
+
+/* ================= ADMIN PANEL ================= */
+function adminTab(tab) {
+    stopAdminChat();
+    document.querySelectorAll('.admin-tab').forEach(d => d.classList.toggle('active', d.dataset.tab === tab));
+    document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
+    const paneId = tab === 'content' ? 'admin-content-tab' : 'admin-' + tab;
+    $(paneId).classList.add('active');
+    $('adminContent').scrollTop = 0;
+
+    if(tab === 'batches') renderAdminBatches();
+    if(tab === 'payments') renderAdminPayments();
+    if(tab === 'chats') renderAdminChats();
+    if(tab === 'students') renderAdminStudents();
+    if(tab === 'content') renderAdminContentTab();
+    if(tab === 'store') renderAdminStore();
+}
+
+function renderAdminBatches() {
+    const box = $('admin-batches');
+    box.innerHTML = `
+        <div class="admin-card">
+            <h3><i class="fas fa-plus-circle" style="color:#0ea5e9;"></i> Add New Batch</h3>
+            <input type="text" id="abTitle" class="f-input" placeholder="Batch title (e.g. Advanced PLC Programming)">
+            <div class="f-row">
+                <input type="number" id="abPrice" class="f-input" placeholder="Price ₹ (0 = Free)">
+                <input type="number" id="abDays" class="f-input" placeholder="Validity (Days)" value="365">
+            </div>
+            <input type="text" id="abImg" class="f-input" placeholder="Image URL (optional)">
+            <textarea id="abDesc" class="f-input" rows="2" placeholder="Short description (optional)"></textarea>
+            <button class="admin-btn" onclick="createBatch('')"><i class="fas fa-plus"></i> Add Batch</button>
+        </div>
+        <div class="admin-card">
+            <h3><i class="fas fa-layer-group" style="color:#0ea5e9;"></i> All Batches (<span id="admin-batch-count">0</span>)</h3>
+            <div id="admin-batch-list"><div style="text-align:center;padding:10px;"><i class="fas fa-spinner fa-spin"></i></div></div>
+        </div>
+    `;
+    db.collection('batches').orderBy('createdAt', 'desc').get().then(snap => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => !b.kind);
+        $('admin-batch-count').textContent = list.length;
+        if(list.length === 0) { $('admin-batch-list').innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;">No batches yet.</p>'; return; }
+        $('admin-batch-list').innerHTML = list.map(b => `
+            <div class="admin-batch-row">
+                <div class="admin-batch-thumb" style="background-image:url('${esc(b.image||SLIDER_IMAGES[0])}')"></div>
+                <div class="conv-body">
+                    <div class="conv-name">${esc(b.title)}</div>
+                    <div class="conv-preview">₹ ${b.price} • ${b.days} Days validity</div>
+                </div>
+                <button class="edit-btn" onclick="manageContent('${b.id}')"><i class="fas fa-folder-open"></i> Content</button>
+                <button class="del-btn" onclick="deleteBatch('${b.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        `).join('');
+    });
+}
+
+async function createBatch(kind) {
+    const title = $('abTitle').value.trim(); const price = Number($('abPrice').value); const days = Number($('abDays').value);
+    const image = $('abImg').value.trim() || SLIDER_IMAGES[0]; const desc = $('abDesc').value.trim();
+    if(!title) return toast('Enter batch title');
+    try {
+        const data = { title, price, days, image, desc, createdAt: Date.now() };
+        if(kind) data.kind = kind;
+        await db.collection('batches').add(data); toast('Batch Created!'); 
+        if(kind) renderAdminStore(); else renderAdminBatches();
+    } catch(e) { toast(e.message); }
+}
+
+async function deleteBatch(id) { if(!confirm('Delete this batch and all its content?')) return; await db.collection('batches').doc(id).delete(); toast('Batch deleted'); renderAdminBatches(); }
+
+function manageContent(batchId) {
+    state.adminCurrentBatchId = batchId;
+    $('modal-body').style.padding = '20px'; $('modal-body').style.overflow = 'auto'; $('modal-body').style.height = 'auto';
+    openModal('Manage Content', `
+        <div class="admin-card" style="padding:20px;box-shadow:none;border:1px solid #e2e8f0;">
+            <h3><i class="fas fa-plus-circle"></i> Add New Item</h3>
+            <select id="itemType" class="f-input" onchange="toggleItemFields()">
+                <option value="folder">📁 Folder</option>
+                <option value="video">📹 Video (YouTube/MP4)</option>
+                <option value="pdf">📄 PDF Document</option>
+                <option value="live">🔴 Live Class</option>
+            </select>
+            <input type="text" id="itemTitle" class="f-input" placeholder="Title">
+            
+            <div id="url-field" style="display:none;">
+                <input type="text" id="itemUrl" class="f-input" placeholder="URL (YouTube or direct link)">
+            </div>
+            
+            <div id="access-field" style="display:none;">
+                <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:6px;">Access Type</label>
+                <select id="itemAccess" class="f-input">
+                    <option value="paid">Paid (Enrolled Students Only)</option>
+                    <option value="free">Free (Demo Preview)</option>
+                </select>
+            </div>
+
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:6px;">Parent Folder</label>
+            <select id="itemParent" class="f-input"><option value="root">Root (Main Folder)</option></select>
+            
+            <button class="admin-btn" onclick="addItemToBatch()"><i class="fas fa-plus"></i> Add Item</button>
+        </div>
+        <h3 style="font-size:15px; margin:20px 0 10px; color:#0f172a;"><i class="fas fa-list"></i> Existing Items</h3>
+        <div id="admin-item-list"></div>
+    `);
+    loadAdminItems();
+}
+
+function toggleItemFields() { 
+    const type = $('itemType').value; 
+    $('url-field').style.display = (type === 'video' || type === 'pdf' || type === 'live') ? 'block' : 'none'; 
+    $('access-field').style.display = (type === 'video' || type === 'pdf') ? 'block' : 'none'; 
+}
+
+async function loadAdminItems() {
+    const snap = await db.collection('batches').doc(state.adminCurrentBatchId).collection('items').get();
+    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    const parentSel = $('itemParent');
+    if(parentSel) {
+        parentSel.innerHTML = '<option value="root">Root (Main Folder)</option>';
+        items.filter(i => i.type === 'folder').forEach(f => { parentSel.innerHTML += `<option value="${f.id}">📁 ${esc(f.title)}</option>`; });
+    }
+    
+    const list = $('admin-item-list');
+    if(items.length === 0) { list.innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;padding:10px;">No items yet.</p>'; return; }
+    list.innerHTML = items.map(i => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #eef2f5; background:#fff; border-radius:10px; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:13px; font-weight:600; color:#0f172a; overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <i class="fas ${i.type === 'folder' ? 'fa-folder' : (i.type==='pdf'?'fa-file-pdf':(i.type==='live'?'fa-tower-broadcast':'fa-play'))}" style="color:#0ea5e9; margin-right:8px;"></i> ${esc(i.title)}
+                </div>
+                <div style="font-size:11px; color:#94a3b8; margin-top:2px;">
+                    ${i.type.toUpperCase()} 
+                    ${i.access ? `• <span style="color:${i.access === 'free' ? '#10b981' : '#f59e0b'};font-weight:600;">${i.access.toUpperCase()}</span>` : ''}
+                    ${i.parent && i.parent !== 'root' ? '• inside folder' : ''}
+                </div>
+            </div>
+            <button onclick="deleteItem('${i.id}')" style="background:#fee2e2; color:#ef4444; border:none; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="fas fa-trash"></i></button>
+        </div>
+    `).join('');
+}
+
+async function addItemToBatch() {
+    const type = $('itemType').value; const title = $('itemTitle').value.trim(); const parent = $('itemParent').value;
+    let url = $('itemUrl') ? $('itemUrl').value.trim() : '';
+    const access = $('itemAccess') ? $('itemAccess').value : 'paid';
+    
+    if(!title) return toast('Enter title');
+    if((type === 'video' || type === 'pdf' || type === 'live') && !url && type !== 'live') return toast('Enter URL');
+    
+    const item = { type, title, parent, createdAt: Date.now() };
+    
+    if(type === 'video' || type === 'pdf') item.access = access;
+    
+    if(type === 'live' && !url) item.url = `https://meet.jit.si/GA-${Math.random().toString(36).substring(7)}`;
+    else if(url) item.url = url;
+    
+    try { 
+        await db.collection('batches').doc(state.adminCurrentBatchId).collection('items').add(item); 
+        toast('Item added!'); 
+        $('itemTitle').value = ''; 
+        if($('itemUrl')) $('itemUrl').value = ''; 
+        loadAdminItems(); 
+    } catch(e) { toast(e.message); }
+}
+
+async function deleteItem(id) { if(!confirm('Delete this item?')) return; await db.collection('batches').doc(state.adminCurrentBatchId).collection('items').doc(id).delete(); loadAdminItems(); toast('Item deleted'); }
+
+function renderAdminPayments() {
+    const box = $('admin-payments');
+    box.innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#0ea5e9;"></i></div>';
+    
+    db.collection('payRequests').where('status', '==', 'pending').get().then(snap => {
+        const reqs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        reqs.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        if(reqs.length === 0) { 
+            box.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle" style="color:#10b981;"></i><h3>No Pending Payments</h3><p>All payments are verified</p></div>'; 
+            return; 
+        }
+        
+        box.innerHTML = reqs.map(r => `
+            <div class="admin-card" style="padding:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+                    <div>
+                        <h4 style="font-size:15px; margin-bottom:4px; color:#0f172a;">${esc(r.userName)}</h4>
+                        <p style="font-size:13px; font-weight:600; color:#0ea5e9;">${esc(r.title)} - ₹${r.amount}</p>
+                    </div>
+                    <span style="background:#fef3c7;color:#d97706;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;">PENDING</span>
+                </div>
+                <p style="font-size:12px; color:#64748b; background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:16px;">UTR: <b>${esc(r.utr)}</b></p>
+                <div style="display:flex; gap:12px;">
+                    <button style="flex:1; padding:12px; background:#10b981; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;" onclick="approvePay('${r.id}','${r.uid}','${r.batchId}')"><i class="fas fa-check"></i> Approve</button>
+                    <button style="flex:1; padding:12px; background:#ef4444; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;" onclick="rejectPay('${r.id}')"><i class="fas fa-times"></i> Reject</button>
+                </div>
+            </div>
+        `).join('');
+    }).catch(err => {
+        box.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i><h3>Error Loading Payments</h3><p>${err.message}</p></div>`;
+    });
+}
+
+async function approvePay(reqId, uid, batchId) {
+    if(!confirm('Approve this payment?')) return;
+    const batchDoc = await db.collection('batches').doc(batchId).get();
+    const days = batchDoc.exists ? (batchDoc.data().days || 365) : 365;
+    await db.collection('users').doc(uid).collection('purchases').doc(batchId).set({ batchId, purchasedAt: Date.now(), expiry: Date.now() + (days * 86400000) });
+    await db.collection('payRequests').doc(reqId).update({ status: 'approved' });
+    toast('Payment Approved!'); renderAdminPayments();
+}
+
+async function rejectPay(reqId) { 
+    if(!confirm('Reject this payment?')) return; 
+    await db.collection('payRequests').doc(reqId).update({ status: 'rejected' }); 
+    toast('Payment Rejected'); renderAdminPayments(); 
+}
+
+let adminChatUnsub = null, adminChatRows = [];
+function stopAdminChat() { if(adminChatUnsub) { adminChatUnsub(); adminChatUnsub = null; } }
+const SPIN = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#0ea5e9;"></i></div>';
+
+async function renderAdminChats() {
+    stopAdminChat();
+    const box = $('admin-chats');
+    box.innerHTML = SPIN;
+    try {
+        const snap = await db.collection('chats').get();
+        if(snap.empty) {
+            box.innerHTML = '<div class="empty-state"><i class="far fa-comment-alt"></i><h3>No Chats Yet</h3><p>When students message you, they will appear here.</p></div>';
+            return;
+        }
+        adminChatRows = await Promise.all(snap.docs.map(async d => {
+            const uid = d.id, meta = d.data() || {};
+            let name = meta.name || '', last = null;
+            if(!name) { try { const u = await db.collection('users').doc(uid).get(); if(u.exists) name = u.data().name || u.data().email || ''; } catch(e) {} }
+            try { const m = await db.collection('chats').doc(uid).collection('messages').orderBy('ts', 'desc').limit(1).get(); if(!m.empty) last = m.docs[0].data(); } catch(e) {}
+            return { uid, name: name || ('User ' + uid.slice(0, 6)), last };
+        }));
+        adminChatRows.sort((a, b) => ((b.last && b.last.ts) || 0) - ((a.last && a.last.ts) || 0));
+        let html = '<div class="admin-card"><h3><i class="fas fa-comments" style="color:#0ea5e9;"></i> Active Conversations</h3>';
+        adminChatRows.forEach((r, i) => {
+            const t = r.last ? new Date(r.last.ts).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+            html += `<div class="admin-batch-row" style="cursor:pointer;" onclick="openAdminChat(${i})">
+                <div class="admin-batch-thumb" style="background-image:url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png');border-radius:50%;"></div>
+                <div class="conv-body">
+                    <div class="conv-name">${esc(r.name)}</div>
+                    <div class="conv-last">${r.last ? (r.last.from === 'admin' ? 'You: ' : '') + esc(r.last.text) : 'Click to view chat'}</div>
+                </div>
+                <span class="conv-time">${t}</span>
+                <i class="fas fa-chevron-right" style="color:#cbd5e1;"></i>
+            </div>`;
+        });
+        box.innerHTML = html + '</div>';
+    } catch(e) { box.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Could not load chats</h3><p>' + esc(e.message) + '</p></div>'; }
+}
+
+function openAdminChat(i) {
+    const r = adminChatRows[i]; if(!r) return;
+    stopAdminChat();
+    const box = $('admin-chats');
+    box.innerHTML = `<div class="ac-wrap">
+        <div class="ac-head">
+            <button class="back-btn" onclick="renderAdminChats()"><i class="fas fa-arrow-left"></i></button>
+            <div class="ac-avatar"></div>
+            <div class="conv-body"><div class="conv-name">${esc(r.name)}</div><div class="conv-preview" style="margin-top:2px;">Student chat</div></div>
+        </div>
+        <div class="chat-messages" id="acMessages"></div>
+        <div class="chat-input-area">
+            <input id="acInput" type="text" placeholder="Type your reply..." autocomplete="off">
+            <i class="fas fa-paper-plane" onclick="sendAdminChat('${r.uid}')"></i>
+        </div>
+    </div>`;
+    $('acInput').addEventListener('keydown', e => { if(e.key === 'Enter') sendAdminChat(r.uid); });
+    adminChatUnsub = db.collection('chats').doc(r.uid).collection('messages').orderBy('ts', 'asc').onSnapshot(snap => {
+        const m = $('acMessages'); if(!m) return;
+        if(snap.empty) { m.innerHTML = '<div class="chat-empty"><i class="far fa-comment-alt"></i><p>No messages yet.</p></div>'; return; }
+        m.innerHTML = snap.docs.map(d => d.data()).map(x => `
+            <div class="msg ${x.from === 'admin' ? 'me' : 'them'}">
+                <div class="bubble">${esc(x.text)}</div>
+                <div class="msg-time">${new Date(x.ts).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</div>
+            </div>`).join('');
+        m.scrollTop = m.scrollHeight;
+    }, e => toast(e.message));
+    setTimeout(() => { const inp = $('acInput'); if(inp) inp.focus(); }, 100);
+}
+
+async function sendAdminChat(uid) {
+    const inp = $('acInput'); if(!inp) return;
+    const text = inp.value.trim(); if(!text) return;
+    inp.value = '';
+    const ts = Date.now();
+    try {
+        await db.collection('chats').doc(uid).collection('messages').add({ from: 'admin', text, ts });
+        await db.collection('chats').doc(uid).set({ uid, lastText: text, lastTs: ts, lastFrom: 'admin' }, { merge: true });
+    } catch(e) { toast(e.message); }
+}
+
+function renderAdminStudents() {
+    const box = $('admin-students');
+    box.innerHTML = '<div style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#0ea5e9;"></i></div>';
+    
+    db.collection('users').get().then(snap => {
+        if(snap.empty) {
+            box.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><h3>No Students Yet</h3><p>Students will appear here after registering.</p></div>';
+            return;
+        }
+        
+        let html = `<div class="admin-card"><h3><i class="fas fa-users"></i> Registered Students (${snap.size})</h3>`;
+        snap.docs.forEach(doc => {
+            const u = doc.data();
+            html += `
+                <div class="admin-batch-row">
+                    <div class="admin-batch-thumb" style="background-image:url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png');border-radius:50%;"></div>
+                    <div class="conv-body">
+                        <div class="conv-name">${esc(u.name || 'Unknown')}</div>
+                        <div class="conv-preview">${esc(u.email || u.phone || 'No contact info')}</div>
+                    </div>
+                    <span style="font-size:10px;color:#64748b;background:#f1f5f9;padding:4px 8px;border-radius:10px;">Joined ${new Date(u.joined).toLocaleDateString()}</span>
+                </div>
+            `;
+        });
+        html += '</div>';
+        box.innerHTML = html;
+    });
+}
+
+/* ============ APP SETTINGS (LOGO + 5 SLIDES) ============ */
+const SLOT_COUNT = 5;
+let cfgDraft = { logo: '', slides: ['', '', '', '', ''] };
+
+async function renderAdminContentTab() {
+    $('admin-content-tab').innerHTML = SPIN;
+    let data = {};
+    try { const doc = await db.collection('config').doc('app').get(); data = doc.exists ? doc.data() : {}; } catch(e) { toast(e.message); }
+    cfgDraft.logo = data.logoUrl || '';
+    const saved = Array.isArray(data.sliderSlots) ? data.sliderSlots : (data.sliderImages || []);
+    cfgDraft.slides = Array.from({ length: SLOT_COUNT }, (_, i) => saved[i] || '');
+    drawSettings();
+}
+
+function isDataUrl(v) { return String(v || '').startsWith('data:'); }
+
+function drawSettings() {
+    const logo = cfgDraft.logo;
+    let slots = '';
+    for(let i = 0; i < SLOT_COUNT; i++) {
+        const v = cfgDraft.slides[i];
+        slots += `<div class="slot">
+            <div class="slot-prev" id="slotPrev${i}" style="${v ? `background-image:url('${esc(v)}')` : ''}">${v ? '' : 'No image'}</div>
+            <div class="slot-body">
+                <div class="slot-title">Slide ${i + 1}</div>
+                <input type="text" class="f-input" placeholder="${isDataUrl(v) ? 'Uploaded from device' : 'Paste image URL'}" value="${isDataUrl(v) ? '' : esc(v)}" oninput="setSlide(${i}, this.value)">
+                <div class="slot-actions">
+                    <label class="mini-btn"><i class="fas fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="pickImage(this,'slide',${i})"></label>
+                    <button class="mini-btn red" onclick="clearSlide(${i})"><i class="fas fa-trash"></i> Clear</button>
+                </div>
+            </div>
+        </div>`;
+    }
+    $('admin-content-tab').innerHTML = `
+        <div class="admin-card">
+            <h3><i class="fas fa-cog" style="color:#0ea5e9;"></i> App Settings</h3>
+
+            <span class="set-label">App Logo (Login page)</span>
+            <div class="logo-row">
+                <div class="logo-prev">${logo ? `<img src="${esc(logo)}" alt="">` : '<i class="fas fa-robot"></i>'}</div>
+                <div style="flex:1;min-width:220px;">
+                    <input type="text" class="f-input" placeholder="${isDataUrl(logo) ? 'Uploaded from device' : 'Paste logo URL'}" value="${isDataUrl(logo) ? '' : esc(logo)}" oninput="setLogo(this.value)" style="margin-bottom:8px;">
+                    <div class="slot-actions">
+                        <label class="mini-btn"><i class="fas fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="pickImage(this,'logo',0)"></label>
+                        <button class="mini-btn red" onclick="setLogo('');drawSettings()"><i class="fas fa-trash"></i> Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <span class="set-label">Home Slider Images (max 5) — phone / app home par dikhengi</span>
+            <p class="set-hint">URL paste karo ya device se upload karo (upload hone par image auto-compress hoti hai). Animated GIF ke liye URL use karo.</p>
+            ${slots}
+
+            <button class="admin-btn" style="margin-top:8px;" onclick="saveSettings()"><i class="fas fa-save"></i> Save All Changes</button>
+        </div>`;
+}
+
+function setLogo(v) { cfgDraft.logo = v.trim(); }
+function setSlide(i, v) {
+    cfgDraft.slides[i] = v.trim();
+    const p = $('slotPrev' + i); if(!p) return;
+    if(cfgDraft.slides[i]) { p.style.backgroundImage = `url('${cfgDraft.slides[i].replace(/'/g, '%27')}')`; p.textContent = ''; }
+    else { p.style.backgroundImage = ''; p.textContent = 'No image'; }
+}
+function clearSlide(i) { cfgDraft.slides[i] = ''; drawSettings(); }
+
+function compressImage(file, maxW, type, q) {
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file), img = new Image();
+        img.onload = () => {
+            const sc = Math.min(1, maxW / img.width);
+            const c = document.createElement('canvas');
+            c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            URL.revokeObjectURL(url);
+            resolve(c.toDataURL(type, q));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Invalid image')); };
+        img.src = url;
+    });
+}
+
+async function pickImage(input, kind, i) {
+    const f = input.files && input.files[0]; if(!f) return;
+    try {
+        const out = kind === 'logo' ? await compressImage(f, 256, 'image/png') : await compressImage(f, 900, 'image/jpeg', 0.72);
+        if(kind === 'logo') cfgDraft.logo = out; else cfgDraft.slides[i] = out;
+        drawSettings();
+        toast('Image ready — Save All Changes dabao');
+    } catch(e) { toast(e.message); }
+}
+
+async function saveSettings() {
+    const slides = cfgDraft.slides.slice(0, SLOT_COUNT);
+    const size = cfgDraft.logo.length + slides.reduce((a, b) => a + b.length, 0);
+    if(size > 950000) return toast('Images bahut badi hain — kuch slides ke liye URL use karo');
+    try {
+        await db.collection('config').doc('app').set({ logoUrl: cfgDraft.logo, sliderSlots: slides, sliderImages: slides.filter(Boolean) }, { merge: true });
+        toast('App settings saved!');
+    } catch(e) { toast(e.message); }
+}
+
+function renderAdminStore() {
+    const box = $('admin-store');
+    box.innerHTML = `
+        <div class="admin-card">
+            <h3><i class="fas fa-shopping-bag" style="color:#0ea5e9;"></i> Add Store Item (E-Book / Software)</h3>
+            <input type="text" id="stTitle" class="f-input" placeholder="Item Title">
+            <div class="f-row">
+                <input type="number" id="stPrice" class="f-input" placeholder="Price ₹ (0 = Free)">
+                <select id="stKind" class="f-input">
+                    <option value="ebooks">E-Book</option>
+                    <option value="software">Software</option>
+                </select>
+            </div>
+            <input type="text" id="stImg" class="f-input" placeholder="Image URL (optional)">
+            <textarea id="stDesc" class="f-input" rows="2" placeholder="Description (optional)"></textarea>
+            <button class="admin-btn" onclick="createStoreItem()"><i class="fas fa-plus"></i> Add Store Item</button>
+        </div>
+        <div class="admin-card">
+            <h3><i class="fas fa-store" style="color:#0ea5e9;"></i> Store Items</h3>
+            <div id="admin-store-list"><div style="text-align:center;padding:10px;"><i class="fas fa-spinner fa-spin"></i></div></div>
+        </div>
+    `;
+    
+    db.collection('batches').orderBy('createdAt', 'desc').get().then(snap => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(b => b.kind);
+        if(list.length === 0) { $('admin-store-list').innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;">No store items yet.</p>'; return; }
+        $('admin-store-list').innerHTML = list.map(b => `
+            <div class="admin-batch-row">
+                <div class="admin-batch-thumb" style="background-image:url('${esc(b.image||SLIDER_IMAGES[0])}')"></div>
+                <div class="conv-body">
+                    <div class="conv-name">${esc(b.title)} <span style="font-size:10px;background:#e0f2fe;color:#0ea5e9;padding:2px 6px;border-radius:4px;margin-left:4px;">${b.kind.toUpperCase()}</span></div>
+                    <div class="conv-preview">₹ ${b.price}</div>
+                </div>
+                <button class="edit-btn" onclick="manageContent('${b.id}')"><i class="fas fa-folder-open"></i> Content</button>
+                <button class="del-btn" onclick="deleteBatch('${b.id}'); setTimeout(renderAdminStore, 500);"><i class="fas fa-trash"></i></button>
+            </div>
+        `).join('');
+    });
+}
+
+async function createStoreItem() {
+    const title = $('stTitle').value.trim(); const price = Number($('stPrice').value); const kind = $('stKind').value;
+    const image = $('stImg').value.trim() || SLIDER_IMAGES[0]; const desc = $('stDesc').value.trim();
+    if(!title) return toast('Enter title');
+    try {
+        await db.collection('batches').add({ title, price, days: 365, image, desc, kind, createdAt: Date.now() });
+        toast('Store Item Created!'); renderAdminStore();
+    } catch(e) { toast(e.message); }
+}
+
+/* ================= EXPOSE GLOBALS ================= */
+window.switchAuthTab = switchAuthTab; window.doLogin = doLogin; window.doRegister = doRegister;
+window.resetPassword = resetPassword; window.logout = logout;
+window.switchView = switchView; window.openBatchDetails = openBatchDetails;
+window.switchBatchTab = switchBatchTab; window.backFromBatch = backFromBatch; window.openFolder = openFolder; window.backFromFolder = backFromFolder;
+window.playVideoFromDetails = playVideoFromDetails; window.initiateBuy = initiateBuy;
+window.openCategory = openCategory; window.selectPayMethod = selectPayMethod;
+window.processPayment = processPayment; window.closePayment = closePayment;
+window.adminTab = adminTab; window.createBatch = createBatch; window.deleteBatch = deleteBatch;
+window.manageContent = manageContent; window.toggleItemFields = toggleItemFields; window.addItemToBatch = addItemToBatch;
+window.deleteItem = deleteItem; window.approvePay = approvePay; window.rejectPay = rejectPay;
+window.closeModal = closeModal; window.toast = toast; window.toggleDrawer = toggleDrawer;
+window.sendChat = sendChat; window.createStoreItem = createStoreItem;
+window.openAdminChat = openAdminChat; window.sendAdminChat = sendAdminChat; window.renderAdminChats = renderAdminChats;
+window.setLogo = setLogo; window.setSlide = setSlide; window.clearSlide = clearSlide; window.pickImage = pickImage; window.saveSettings = saveSettings; window.drawSettings = drawSettings; window.goSlide = goSlide;
+
+/* ================= START APP ================= */
+window.addEventListener('DOMContentLoaded', () => {
+    runIntro();
+    loadAppConfig();
+    fitNet(); fitHero();
+    setTimeout(fitNet, 150);
+    const ci = $('chatInput'); if(ci) ci.addEventListener('keydown', e => { if(e.key === 'Enter') sendChat(); });
+});
+window.addEventListener('load', () => { fitNet(); fitHero(); });
+</script>
+</body>
+</html>
