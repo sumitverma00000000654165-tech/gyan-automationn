@@ -2128,7 +2128,7 @@ function openPayment() {
         <div id="payPanel"></div>
         <div class="pay-err" id="payErr"></div>
         <button class="pay-btn" id="payBtn" onclick="processPayment()"><i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}</button>
-        <div class="pay-secure"><i class="fas fa-shield-alt"></i> Access is activated after payment verification.<br>By paying you agree to our <a onclick="showPolicy('terms')" style="color:#0ea5e9;cursor:pointer">Terms</a> &amp; <a onclick="showPolicy('refund')" style="color:#0ea5e9;cursor:pointer">Refund Policy</a></div>
+        <div class="pay-secure"><i class="fas fa-shield-alt"></i><span style="text-align:center;line-height:1.6">Access is activated after payment verification.<br>By paying you agree to our <a onclick="showPolicy('terms')" style="color:#0ea5e9;cursor:pointer">Terms</a> &amp; <a onclick="showPolicy('refund')" style="color:#0ea5e9;cursor:pointer">Refund Policy</a></span></div>
     `;
     renderPayPanel();
 }
@@ -2146,7 +2146,7 @@ function renderPayPanel() {
         panel.innerHTML = `
             <div class="pay-panel">
                 <p class="pay-note"><i class="fas fa-shield-alt"></i> Pay securely with UPI, Card or NetBanking via Razorpay. Your course unlocks automatically after payment.</p>
-                ${/^rzp_test_/.test(RAZORPAY_KEY_ID) ? '<div class="pay-test"><b>TEST MODE:</b> asli card / UPI app se payment fail hoga. Test card <b>4111 1111 1111 1111</b> (koi bhi future expiry, koi bhi CVV) ya UPI ID <b>success@razorpay</b> use karo. Asli payment ke liye Razorpay <b>Live Key</b> (rzp_live_...) lagao.</div>' : ''}
+                ${(state.isAdmin && /^rzp_test_/.test(RAZORPAY_KEY_ID)) ? '<div class="pay-test"><b>TEST MODE:</b> asli card / UPI app se payment fail hoga. Test card <b>4111 1111 1111 1111</b> (koi bhi future expiry, koi bhi CVV) ya UPI ID <b>success@razorpay</b> use karo. Asli payment ke liye Razorpay <b>Live Key</b> (rzp_live_...) lagao.</div>' : ''}
             </div>
         `;
     } else if(state.paymentMethod === 'upi') {
@@ -2269,6 +2269,7 @@ async function payWithRazorpay(b, btn) {
     if(!(price >= 1)) return toast('Invalid price');
 
     payError('');
+    if(location.protocol === 'file:') { payError('Ye page computer se (file://) khula hai. Razorpay file:// par kaam nahi karta. Site ko https:// GitHub Pages link se kholo.'); return toast('Razorpay ke liye site https:// link se kholo, file se nahi'); }
     state.processing = true; state.rzpOpen = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; btn.disabled = true;
 
@@ -2283,8 +2284,7 @@ async function payWithRazorpay(b, btn) {
         currency: 'INR',
         name: 'Gyan Automation',
         description: String(b.title || 'Course').slice(0, 120),
-        prefill: (function(){ var pf = { name: userName }; var d = String(phone || '').replace(/\D/g, '').slice(-10); if(/^\S+@\S+\.\S+$/.test(email)) pf.email = email; if(d.length === 10) pf.contact = d; return pf; })(),
-        notes: { batchId: b.id, uid: state.user.uid },   // Razorpay dashboard me dikhega
+        /* prefill hata diya (invalid prefill se checkout 'Payment Failed' de sakta hai) */
         theme: { color: '#2563eb' },
         handler: async function(resp) {
             paid = true; state.saving = true;
@@ -2328,9 +2328,7 @@ async function payWithRazorpay(b, btn) {
                 state.processing = false; state.saving = false; state.rzpOpen = false;
             }
         },
-        retry: { enabled: true, max_count: 3 },
-        remember_customer: false,
-        modal: { escape: true, confirm_close: false, backdropclose: false, handleback: true, ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
+        modal: { escape: true, confirm_close: false, ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
     };
 
     try {
@@ -2339,7 +2337,7 @@ async function payWithRazorpay(b, btn) {
             const er = (r && r.error) || {};
             const why = [er.description, er.reason, er.code].filter(Boolean).join(' | ') || 'try again';
             console.warn('Razorpay payment.failed', er);
-            payError('Payment failed: ' + why + (/^rzp_test_/.test(RAZORPAY_KEY_ID) ? '  (Test mode: test card 4111 1111 1111 1111 ya UPI success@razorpay use karo)' : ''));
+            payError('Payment failed: ' + why + ((state.isAdmin && /^rzp_test_/.test(RAZORPAY_KEY_ID)) ? '  (Test mode: test card 4111 1111 1111 1111 ya UPI success@razorpay use karo)' : ''));
             toast('Payment failed: ' + why);
             resetPayBtn(btn, b);
         });
