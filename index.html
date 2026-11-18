@@ -1515,7 +1515,6 @@ body.show-site #pc-site.menu-open{overflow:hidden}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js"></script>
 
@@ -2165,9 +2164,8 @@ async function processPayment() {
     }
 }
 
-/* ================= RAZORPAY CHECKOUT (secure: Firebase Cloud Functions) ================= */
-/* Key Secret sirf server (Cloud Functions) me hai. Yahan kuch secret nahi hai. */
-const fnApi = firebase.app().functions('asia-south1');
+/* ================= RAZORPAY CHECKOUT (direct, bina backend / Cloud Functions ke) ================= */
+const RAZORPAY_KEY_ID = 'rzp_test_U1l2jitWg2MNdE';
 
 function resetPayBtn(btn, b) { btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false; state.processing = false; }
 
@@ -2178,39 +2176,53 @@ async function payWithRazorpay(b, btn) {
     state.processing = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; btn.disabled = true;
 
-    let order;
-    try { order = (await fnApi.httpsCallable('createOrder')({ batchId: b.id })).data; }
-    catch(e) { toast('Order create nahi hua: ' + (e.message || 'error')); return resetPayBtn(btn, b); }
-
     const email = (state.user.email && state.user.email.indexOf(PHONE_DOMAIN) === -1) ? state.user.email : '';
     const phone = (state.profile && state.profile.phone) || '';
     const userName = (state.profile && state.profile.name) || '';
     let paid = false;
 
-    const rzp = new Razorpay({
-        key: order.key_id,
-        amount: order.amount,
-        currency: order.currency,
-        order_id: order.order_id,
+    const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: Math.round(Number(b.price) * 100),   // paise me (₹299 => 29900)
+        currency: 'INR',
         name: 'Gyan Automation',
         description: b.title,
         prefill: { name: userName, email: email, contact: phone },
         theme: { color: '#2563eb' },
         handler: async function(resp) {
             paid = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying Payment...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Purchase...';
+            const now = Date.now();
+            const expiry = now + ((b.days || 365) * 86400000);
             let ok = false, err = '';
             for(let i = 0; i < 3 && !ok; i++) {
                 try {
-                    await fnApi.httpsCallable('verifyPayment')({
-                        razorpay_payment_id: resp.razorpay_payment_id,
-                        razorpay_order_id: resp.razorpay_order_id,
-                        razorpay_signature: resp.razorpay_signature
+                    // 1) orders collection me entry
+                    await db.collection('orders').doc(resp.razorpay_payment_id).set({
+                        paymentId: resp.razorpay_payment_id,
+                        uid: state.user.uid,
+                        userName: userName,
+                        email: email,
+                        phone: phone,
+                        batchId: b.id,
+                        title: b.title,
+                        amount: Number(b.price),
+                        currency: 'INR',
+                        status: 'paid',
+                        method: 'razorpay',
+                        createdAt: now
+                    });
+                    // 2) user ke purchased batches me entry
+                    await db.collection('users').doc(state.user.uid).collection('purchases').doc(b.id).set({
+                        batchId: b.id,
+                        purchasedAt: now,
+                        expiry: expiry,
+                        paymentId: resp.razorpay_payment_id
                     });
                     ok = true;
                 } catch(e) {
                     err = e.message || 'error';
-                    if(e.code === 'functions/permission-denied' || e.code === 'functions/not-found') break;
+                    if(e.code === 'permission-denied') break;
                     await new Promise(r => setTimeout(r, 1000 * (i + 1)));
                 }
             }
@@ -2219,17 +2231,21 @@ async function payWithRazorpay(b, btn) {
                 state.processing = false;
                 setTimeout(() => { $('payOverlay').classList.remove('active'); refreshCurrent(); }, 2000);
             } else {
-                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check" style="background:#f59e0b"><i class="fas fa-exclamation"></i></div><h3>Payment Received</h3><p>Verification abhi complete nahi hua (${esc(err)}). Paisa safe hai. Is Payment ID ke saath support se contact karo, batch jaldi unlock kar diya jayega.</p><div class="pay-receipt">Payment ID: ${esc(resp.razorpay_payment_id)}<br>Order ID: ${esc(resp.razorpay_order_id)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Close</button></div>`;
+                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check" style="background:#f59e0b"><i class="fas fa-exclamation"></i></div><h3>Payment Received</h3><p>Purchase save nahi ho paya (${esc(err)}). Paisa safe hai. Is Payment ID ke saath support se contact karo, batch jaldi unlock kar diya jayega.</p><div class="pay-receipt">Payment ID: ${esc(resp.razorpay_payment_id)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Close</button></div>`;
                 state.processing = false;
             }
         },
         modal: { ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
-    });
-    rzp.on('payment.failed', function(r) {
-        toast('Payment failed: ' + ((r.error && r.error.description) || 'try again'));
-        resetPayBtn(btn, b);
-    });
-    try { rzp.open(); } catch(e) { toast('Checkout open nahi hua: ' + e.message); resetPayBtn(btn, b); }
+    };
+
+    try {
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(r) {
+            toast('Payment failed: ' + ((r.error && r.error.description) || 'try again'));
+            resetPayBtn(btn, b);
+        });
+        rzp.open();
+    } catch(e) { toast('Checkout open nahi hua: ' + e.message); resetPayBtn(btn, b); }
 }
 
 /* ================= CATEGORY ================= */
