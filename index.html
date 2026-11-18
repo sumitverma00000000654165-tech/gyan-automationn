@@ -929,7 +929,6 @@ body.show-site #pc-site.menu-open{overflow:hidden}
 
 /* ---- video player (phone seek-bar + sizing) ---- */
 #modal-body .plyr{height:100%;width:100%;background:#000;}
-#modal-body .plyr__video-wrapper,#modal-body .plyr__video-embed{height:100%;}
 #modal-body video{max-height:100%;object-fit:contain;}
 .plyr input[type=range]{touch-action:none;-webkit-appearance:none;appearance:none;}
 .plyr--full-ui input[type=range]{height:22px;}
@@ -1141,6 +1140,7 @@ body.show-site #pc-site.menu-open{overflow:hidden}
                     <div class="greeting"><h2>Hello, <span id="userName">Student</span></h2><p>Ready to learn something new?</p></div>
                     <div class="profile-avatar" onclick="toggleDrawer()"></div>
                 </div>
+                <div id="gaHomeLive"></div>
                 <div class="pc-hero">
                     <div class="net-fit" id="heroFit">
                       <div class="net-stage" id="heroStage" style="width:760px;height:430px;">
@@ -1205,6 +1205,7 @@ body.show-site #pc-site.menu-open{overflow:hidden}
                     <button class="back-btn" onclick="backFromBatch()"><i class="fas fa-arrow-left"></i></button>
                     <div class="section-title" id="batchDetailTitle">Batch Details</div>
                 </div>
+                <div id="gaBatchClasses"></div>
                 <div id="batchTabBody"></div>
             </section>
 
@@ -1245,6 +1246,18 @@ body.show-site #pc-site.menu-open{overflow:hidden}
                     <input id="chatInput" type="text" placeholder="Type your message here...">
                     <i class="fas fa-paper-plane" onclick="sendChat()"></i>
                 </div>
+            </section>
+
+            <!-- LIVE & RECORDED CLASSES (admin panel > Classes) -->
+            <section id="classes-view" class="view-section">
+                <div class="sub-head">
+                    <button class="back-btn" onclick="GA.back()"><i class="fas fa-arrow-left"></i></button>
+                    <div class="section-title" id="gaClsTitle">Live &amp; Recorded Classes</div>
+                </div>
+                <div class="ga-stage"><div class="ga-box"><div class="ga-in" id="gaStage"><div class="ga-err">Loading…</div></div></div></div>
+                <div class="ga-info" id="gaInfo" style="display:none"></div>
+                <div class="ga-plh" id="gaPlh" style="display:none">Class Playlist</div>
+                <div id="gaList"></div>
             </section>
         </div>
 
@@ -1519,6 +1532,7 @@ body.show-site #pc-site.menu-open{overflow:hidden}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.8/hls.min.js"></script>
 
 <script>
 /* ================= CONFIG ================= */
@@ -1547,7 +1561,7 @@ function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<
 function fmtPrice(n) { return Number(n) === 0 ? 'FREE' : '₹ ' + Number(n).toLocaleString('en-IN'); }
 function toAuthEmail(val) { val = val.trim().toLowerCase(); if(val.includes('@')) return val; const d = val.replace(/\D/g, ''); return d.length >= 10 ? d.slice(-10) + PHONE_DOMAIN : null; }
 function openModal(title, bodyHtml) { $('modal-title').textContent = title; $('modal-body').innerHTML = bodyHtml; $('app-modal').classList.add('active'); }
-function closeModal() { $('app-modal').classList.remove('active'); if(window.player) { window.player.destroy(); window.player = null; } }
+function closeModal() { $('app-modal').classList.remove('active'); if(window.GA) GA.destroy(); if(window.player) { try { window.player.destroy(); } catch(e) {} window.player = null; } $('modal-body').style.background = ''; }
 function toggleDrawer() { $('drawer').classList.toggle('active'); $('drawerOverlay').classList.toggle('active'); }
 
 /* ================= APP CONFIG (LOGO & SLIDER) ================= */
@@ -1670,6 +1684,7 @@ let _authNullTimer = null, _loadedUid = null, _firstAuth = true;
 function showLoginScreen() {
     document.body.classList.add('show-site');
     state.user = null; state.isAdmin = false; _loadedUid = null;
+    if(window.GA) GA.stop();
     $('auth-screen').classList.remove('hide');
     $('app-screen').classList.remove('active');
     $('admin-screen').classList.remove('active');
@@ -1709,6 +1724,7 @@ let unsubBatches, unsubPurchases;
 
 async function loadStudentData() {
     if(unsubBatches) unsubBatches(); if(unsubPurchases) unsubPurchases();
+    if(window.GA) GA.start();
 
     let uDoc = { exists: false };
     try { uDoc = await db.collection('users').doc(state.user.uid).get(); } catch(e) { console.warn('profile', e); }
@@ -1728,6 +1744,7 @@ async function loadStudentData() {
 
     unsubPurchases = db.collection('users').doc(state.user.uid).collection('purchases').onSnapshot(snap => {
         state.myPurchases = snap.docs.map(d => d.data());
+        if(window.GA) GA.lite();
         renderBatches();
         renderMyCourses();
         refreshCurrent();
@@ -1791,16 +1808,18 @@ function bindSliderSwipe(wrap, track) {
 }
 
 function switchView(viewId) {
+    if(viewId !== 'classes-view' && window.GA) GA.leave();
     document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
     $(viewId).classList.add('active');
     $('buyBar').classList.remove('active');
     $('bottomNav').classList.remove('hide');
     document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.target === viewId));
 
-    const titles = { 'home-view':'Gyan Automation', 'paid-view':'Paid Courses', 'batch-detail-view': (state.currentBatch ? state.currentBatch.title : 'Batch Details'), 'folder-view': state.currentFolderTitle || 'Folder', 'cat-view':'Category', 'courses-view':'My Courses', 'downloads-view':'Downloads', 'chat-view':'Chat' };
+    const titles = { 'home-view':'Gyan Automation', 'classes-view':'Live & Recorded Classes', 'paid-view':'Paid Courses', 'batch-detail-view': (state.currentBatch ? state.currentBatch.title : 'Batch Details'), 'folder-view': state.currentFolderTitle || 'Folder', 'cat-view':'Category', 'courses-view':'My Courses', 'downloads-view':'Downloads', 'chat-view':'Chat' };
     $('appHeaderTitle').textContent = titles[viewId] || 'Gyan Automation';
     $('mainContent').scrollTop = 0;
     setTimeout(fitHero, 30);
+    if(window.GA) GA.lite();
 }
 
 function renderBatches() {
@@ -1894,6 +1913,7 @@ function renderBatchDetails() {
     const body = $('batchTabBody');
     const purchased = isPurchased(b.id);
     updateBuyBar(b, purchased);
+    if(window.GA) GA.lite();
     if(body.dataset.batch !== b.id) {
         body.innerHTML = '<div style="text-align:center;padding:30px;"><i class="fas fa-spinner fa-spin"></i></div>';
         body.dataset.batch = b.id;
@@ -1976,13 +1996,15 @@ function playVideoFromDetails(itemId) {
     if(item.type === 'live') {
         const lu = item.url || '';
         const yt = lu.match(/(?:youtube\.com\/(?:live\/|watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
-        if(yt) { openModal(item.title, `<iframe src="https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0" style="width:100%;height:100%;border:0;" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`); return; }
+        if(yt) { gaOpenStage(item.title, { kind: 'youtube', id: yt[1] }); return; }
         if(/^https:\/\/[\w.-]+\.daily\.co\//.test(lu)) { openModal(item.title, `<iframe src="${esc(lu)}" style="width:100%;height:100%;border:0;" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>`); return; }
         const room = item.url ? item.url.split('/').pop() : 'ga-live';
         openModal(item.title, `<iframe src="https://meet.jit.si/${room}" style="width:100%;height:100%;border:0;" allow="camera;microphone"></iframe>`); return;
     }
     const rawUrl = String(item.url || '').trim();
     const media = parseMediaUrl(rawUrl, item.type);
+    const gaOk = location.protocol !== 'file:' && (media.kind === 'youtube' || media.kind === 'vimeo' || media.kind === 'video' || (media.kind === 'iframe' && item.type !== 'pdf' && !/\.pdf($|\?)/i.test(rawUrl)));
+    if(gaOk) { gaOpenStage(item.title, media); return; }
     let html = '', usePlyr = false;
     if(location.protocol === 'file:' && (media.kind === 'youtube' || media.kind === 'vimeo')) {
         html = `<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;color:#475569;"><i class="fas fa-globe" style="font-size:34px;color:#0ea5e9;"></i><p style="font-size:14px;line-height:1.6;">Ye page computer se seedha (file://) khula hai, isliye YouTube/Vimeo video yahan nahi chalega (Error 153).<br>Site ko <b>https://</b> link (GitHub Pages) se kholein, wahan ye chalega.</p><a href="${esc(rawUrl)}" target="_blank" rel="noopener" style="background:#0ea5e9;color:#fff;padding:12px 22px;border-radius:12px;font-weight:600;text-decoration:none;font-size:13px;">Video browser me kholein</a></div>`;
@@ -2207,7 +2229,7 @@ async function payWithRazorpay(b, btn) {
         currency: 'INR',
         name: 'Gyan Automation',
         description: b.title,
-        prefill: { name: userName, email: email, contact: phone },
+        prefill: (function(){ var pf = { name: userName }; var d = String(phone || '').replace(/\D/g, '').slice(-10); if(/^\S+@\S+\.\S+$/.test(email)) pf.email = email; if(d.length === 10) pf.contact = d; return pf; })(),
         notes: { batchId: b.id, uid: state.user.uid },   // Razorpay dashboard me dikhega
         theme: { color: '#2563eb' },
         handler: async function(resp) {
@@ -2252,7 +2274,7 @@ async function payWithRazorpay(b, btn) {
                 state.processing = false;
             }
         },
-        modal: { ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
+        modal: { escape: true, confirm_close: false, ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
     };
 
     try {
@@ -3685,11 +3707,276 @@ function gcParseVideoInput(raw){
 })();
 </script>
 
+<style>
+/* ===== GA: unified video / live class player (Plyr) ===== */
+.ga-stage{position:relative;background:#000;border-radius:14px;overflow:hidden;max-width:980px;margin:0 auto;box-shadow:0 8px 24px rgba(15,23,42,.18);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ga-mstage{border-radius:0;box-shadow:none}
+.ga-box{position:relative;width:100%;padding-top:56.25%;background:#000;overflow:hidden}
+.ga-in{position:absolute;inset:0}
+.ga-in .plyr{height:100%;width:100%;--plyr-color-main:#0ea5e9}
+.ga-in .plyr__video-wrapper{background:#000}
+.ga-in iframe,.ga-in video{border:0;width:100%;height:100%;display:block}
+.ga-in>iframe,.ga-in>video{position:absolute;inset:0}
+.ga-in .plyr--youtube .plyr__video-embed iframe{transform:scale(1.18);transform-origin:center center}
+.ga-in .plyr__controls{padding-bottom:6px}
+.ga-shield{position:absolute;left:0;right:0;top:0;bottom:45px;z-index:2;background:transparent;cursor:pointer}
+.ga-thumb{position:absolute;inset:0;z-index:2;background:#000 center/cover no-repeat;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .25s}
+.ga-thumb.hide{opacity:0;pointer-events:none}
+.ga-pbtn{width:66px;height:66px;border-radius:50%;background:rgba(14,165,233,.92);display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;padding-left:5px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.ga-wm{position:absolute;z-index:3;pointer-events:none;font-size:11px;font-weight:600;color:#fff;opacity:.45;text-shadow:0 1px 3px #000;white-space:nowrap;transition:top 3s ease-in-out,left 3s ease-in-out}
+.ga-live{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;text-align:center;background:radial-gradient(circle at 50% 30%,#1b2a4a,#070c18 75%);color:#e8eefc}
+.ga-badge{display:inline-flex;align-items:center;gap:7px;background:#dc2626;color:#fff;font-size:12px;font-weight:800;letter-spacing:1.2px;padding:5px 14px;border-radius:20px}
+.ga-badge i{width:8px;height:8px;border-radius:50%;background:#fff;animation:gaPulse 1.1s infinite}
+@keyframes gaPulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.8)}70%{box-shadow:0 0 0 8px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.ga-live h2{font-size:clamp(13px,3.4vw,22px);letter-spacing:1.5px;font-weight:800}
+.ga-live p{font-size:clamp(11px,2.8vw,15px);color:#8ea0c4;max-width:90%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ga-join{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;text-decoration:none;font-weight:700;font-size:clamp(12px,3.2vw,16px);padding:clamp(9px,2.2vw,14px) clamp(16px,5vw,30px);border-radius:12px;box-shadow:0 8px 22px rgba(34,197,94,.35)}
+.ga-err{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;font-size:13px;line-height:1.6;color:#8ea0c4;background:#0b1220}
+.ga-err b{color:#e8eefc}
+/* info + playlist (light app theme) */
+.ga-info{max-width:980px;margin:0 auto;padding:16px 2px 12px}
+.ga-info h2{font-size:17px;font-weight:700;line-height:1.35;margin:8px 0 12px;color:#0f172a}
+.ga-tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.6px;padding:3px 10px;border-radius:20px}
+.ga-t-live{background:#dc2626;color:#fff}.ga-t-rec{background:#e0f2fe;color:#0369a1}
+.ga-dl{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;text-decoration:none;font-weight:600;font-size:13px;padding:10px 18px;border-radius:10px}
+.ga-plh{max-width:980px;margin:8px auto 10px;font-size:12px;font-weight:700;color:#64748b;letter-spacing:.6px;text-transform:uppercase}
+#gaList{max-width:980px;margin:0 auto}
+.ga-item{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:10px;cursor:pointer;transition:.2s;box-shadow:0 2px 8px rgba(15,23,42,.04)}
+.ga-item:hover{border-color:#0ea5e9}
+.ga-item.on{border-color:#0ea5e9;background:#f0f9ff}
+.ga-num{flex:0 0 32px;height:32px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#64748b}
+.ga-item.on .ga-num{background:#0ea5e9;color:#fff}
+.ga-item .ga-tx{flex:1;min-width:0}
+.ga-item .ga-tt{font-size:13px;font-weight:600;line-height:1.35;color:#0f172a}
+.ga-item .ga-st{font-size:11px;color:#94a3b8;margin-top:3px}
+.ga-item .ga-st .ga-lv{color:#dc2626;font-weight:700}
+/* batch banner + home strip */
+.ga-card{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:16px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;cursor:pointer;box-shadow:0 4px 16px rgba(15,23,42,.05);transition:.2s}
+.ga-card:hover{border-color:#0ea5e9;transform:translateY(-1px)}
+.ga-card .ga-ic{flex:0 0 44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#2563eb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px}
+.ga-card.ga-red .ga-ic{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.ga-card .ga-ct{flex:1;min-width:0}
+.ga-card .ga-ch{font-size:14px;font-weight:700;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ga-card .ga-cs{font-size:12px;color:#64748b;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ga-card .ga-go{color:#94a3b8;font-size:14px}
+.ga-card.ga-lock{opacity:.7}
+.ga-pill{display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#dc2626;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:20px;margin-right:6px}
+.ga-pill i{width:6px;height:6px;border-radius:50%;background:#dc2626;animation:gaPulse 1.2s infinite}
+@media(max-width:600px){.ga-pbtn{width:54px;height:54px;font-size:22px}}
+</style>
 <script>
-/* Student drawer link -> player.html */
-(function(){var dm=document.querySelector('.drawer-menu');if(!dm)return;var li=document.createElement('li');
-li.innerHTML='<i class="fas fa-circle-play"></i> Live &amp; Recorded Classes';
-li.onclick=function(){location.href='player.html';};dm.insertBefore(li,dm.lastElementChild);})();
+/* ===================== GA : player + Classes (in-app) ===================== */
+window.GA = (function(){
+  var g = function(id){ return document.getElementById(id); };
+  var E = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); };
+  var plyr = null, hls = null, wm = null;
+  var D = { all: [], unsub: null, err: null, filter: '', want: null, cur: null, sig: '', prev: 'home-view' };
+  var PLYR_OPTS = { controls: ['play','progress','current-time','mute','volume','settings','fullscreen'], settings: ['quality','speed'], keyboard: { focused: true, global: false }, tooltips: { controls: false, seek: true } };
+  var isLive = function(c){ return c.mode === 'meet' || c.mode === 'live'; };
+
+  function label(){
+    var p = state.profile || {}, u = state.user || {};
+    return [p.name || (u.email ? u.email.split('@')[0] : 'Student'), p.phone].filter(Boolean).join(' \u2022 ');
+  }
+  function destroy(){
+    clearInterval(wm); wm = null;
+    if(plyr){ try{ plyr.destroy(); }catch(e){} plyr = null; }
+    if(hls){ try{ hls.destroy(); }catch(e){} hls = null; }
+  }
+  function watermark(parent){
+    var d = document.createElement('div'); d.className = 'ga-wm'; d.textContent = label(); parent.appendChild(d);
+    var mv = function(){ d.style.top = (8 + Math.random() * 70) + '%'; d.style.left = (3 + Math.random() * 55) + '%'; };
+    mv(); wm = setInterval(mv, 6000);
+  }
+
+  /* d = { kind:'youtube'|'vimeo'|'video'|'iframe'|'meet', id|src, mime, title } */
+  function mount(st, d){
+    destroy(); st.innerHTML = '';
+    st.oncontextmenu = function(e){ e.preventDefault(); };
+    var fail = function(html){ st.innerHTML = '<div class="ga-err"><div>' + html + '</div></div>'; };
+    if(d.kind === 'meet'){
+      var mu = /^https:\/\/(meet\.google\.com|g\.co\/meet)\//i.test(d.src || '') ? d.src : '';
+      if(!mu) return fail('Meet link invalid hai. Admin panel me class edit karo.');
+      st.innerHTML = '<div class="ga-live"><span class="ga-badge"><i></i>LIVE</span><h2>LIVE CLASS IN PROGRESS</h2><p>' + E(d.title) + '</p><a class="ga-join" target="_blank" rel="noopener" href="' + E(mu) + '">Join Live on Google Meet</a></div>';
+      return;
+    }
+    if(!window.Plyr && (d.kind === 'youtube' || d.kind === 'vimeo' || d.kind === 'video')) return fail('Player load nahi hua. Internet check karke page refresh karo.');
+    if(d.kind === 'youtube'){
+      var id = d.id;
+      if(!/^[\w-]{11}$/.test(id || '')) return fail('Video ID sahi nahi hai. Admin panel me link dobara save karo.');
+      if(location.protocol === 'file:') return fail('<b>YouTube Error 153</b><br>Page file:// se khula hai. Ise <b>https://</b> link (hosting / GitHub Pages) se kholo.');
+      st.innerHTML = '<div id="gaYt" data-plyr-provider="youtube" data-plyr-embed-id="' + id + '"></div>';
+      var p = plyr = new Plyr('#gaYt', Object.assign({}, PLYR_OPTS, { clickToPlay: false, ratio: '16:9',
+        youtube: { rel: 0, modestbranding: 1, playsinline: 1, iv_load_policy: 3, cc_load_policy: 0, disablekb: 1 } }));
+      var w = p.elements.wrapper;
+      var thumb = document.createElement('div'); thumb.className = 'ga-thumb';
+      thumb.style.backgroundImage = 'url(https://i.ytimg.com/vi/' + id + '/hqdefault.jpg)';
+      thumb.innerHTML = '<span class="ga-pbtn">&#9654;</span>';
+      var shield = document.createElement('div'); shield.className = 'ga-shield';
+      w.appendChild(shield); w.appendChild(thumb); watermark(w);
+      shield.onclick = function(){ p.togglePlay(); };
+      shield.ondblclick = function(){ p.fullscreen.toggle(); };
+      thumb.onclick = function(){ p.play(); };
+      p.on('playing', function(){ thumb.classList.add('hide'); });
+      p.on('pause', function(){ setTimeout(function(){ if(plyr === p && p.paused) thumb.classList.remove('hide'); }, 250); });
+      p.on('ended', function(){ thumb.classList.remove('hide'); });
+      return;
+    }
+    if(d.kind === 'vimeo'){
+      if(!/^\d{6,}$/.test(String(d.id || ''))) return fail('Vimeo link sahi nahi hai.');
+      st.innerHTML = '<div id="gaYt" data-plyr-provider="vimeo" data-plyr-embed-id="' + d.id + '"></div>';
+      plyr = new Plyr('#gaYt', Object.assign({}, PLYR_OPTS, { ratio: '16:9', vimeo: { dnt: true, playsinline: true } }));
+      watermark(plyr.elements.wrapper);
+      return;
+    }
+    if(d.kind === 'video'){
+      var url = /^https:\/\//i.test(d.src || '') ? d.src : '';
+      if(!url) return fail('Video link https:// hona chahiye.');
+      st.innerHTML = '<video id="gaVid" playsinline webkit-playsinline preload="metadata" controlsList="nodownload"></video>';
+      var v = g('gaVid'), isHls = /\.m3u8(\?|$)/i.test(url);
+      if(isHls && window.Hls && Hls.isSupported()){ hls = new Hls(); hls.loadSource(url); hls.attachMedia(v); }
+      else v.src = url;
+      plyr = new Plyr(v, Object.assign({}, PLYR_OPTS, { ratio: '16:9' }));
+      watermark(plyr.elements.wrapper);
+      return;
+    }
+    var iu = /^https:\/\//i.test(d.src || '') ? d.src : '';
+    if(!iu) return fail('Embed link https:// hona chahiye.');
+    st.innerHTML = '<iframe src="' + E(iu) + '" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen" allowfullscreen></iframe>';
+    watermark(st);
+  }
+
+  /* batch items (modal) */
+  window.gaOpenStage = function(title, d){
+    var mb = g('modal-body');
+    mb.style.cssText = 'padding:0;overflow:hidden;height:100%;background:#000';
+    openModal(title, '<div class="ga-stage ga-mstage"><div class="ga-box"><div class="ga-in" id="gaModalIn"></div></div></div>');
+    mount(g('gaModalIn'), Object.assign({ title: title }, d));
+  };
+
+  /* ---------- classes data ---------- */
+  function visible(){
+    var admin = state.isAdmin;
+    return D.all.filter(function(c){ return admin || !c.batchId || isPurchased(c.batchId); });
+  }
+  function start(){
+    if(D.unsub || !state.user) return;
+    D.unsub = db.collection('classes').orderBy('createdAt', 'asc').onSnapshot(function(snap){
+      D.err = null; D.all = snap.docs.map(function(d){ return Object.assign({ id: d.id }, d.data()); }); refresh();
+    }, function(err){ D.err = err; console.warn('classes', err); refresh(); });
+  }
+  function stop(){
+    if(D.unsub){ D.unsub(); D.unsub = null; }
+    D.all = []; D.err = null; D.cur = null; D.sig = ''; destroy();
+  }
+
+  /* ---------- home strip + batch banner ---------- */
+  function renderHome(){
+    var el = g('gaHomeLive'); if(!el) return;
+    var live = visible().filter(isLive);
+    if(!live.length){ el.innerHTML = ''; return; }
+    var c = live[0];
+    el.innerHTML = '<div class="ga-card ga-red" onclick="GA.open(\'\',\'' + E(c.id) + '\')"><div class="ga-ic"><i class="fas fa-tower-broadcast"></i></div><div class="ga-ct"><div class="ga-ch"><span class="ga-pill"><i></i>LIVE</span>' + E(c.title) + '</div><div class="ga-cs">Live class chal rahi hai \u2022 Join karne ke liye tap karo</div></div><i class="fas fa-chevron-right ga-go"></i></div>';
+  }
+  function renderBatch(){
+    var el = g('gaBatchClasses'); if(!el) return;
+    var b = state.currentBatch;
+    if(!b){ el.innerHTML = ''; return; }
+    var list = D.all.filter(function(c){ return c.batchId === b.id; });
+    if(!list.length){ el.innerHTML = ''; return; }
+    var ok = state.isAdmin || isPurchased(b.id), liveN = list.filter(isLive).length;
+    el.innerHTML = '<div class="ga-card' + (ok ? '' : ' ga-lock') + (liveN ? ' ga-red' : '') + '" onclick="' + (ok ? 'GA.open(\'' + E(b.id) + '\')' : 'toast(\'Classes dekhne ke liye pehle batch kharido.\')') + '"><div class="ga-ic"><i class="fas ' + (ok ? 'fa-video' : 'fa-lock') + '"></i></div><div class="ga-ct"><div class="ga-ch">' + (liveN ? '<span class="ga-pill"><i></i>LIVE</span>' : '') + 'Live &amp; Recorded Classes</div><div class="ga-cs">' + list.length + ' class' + (list.length > 1 ? 'es' : '') + (ok ? '' : ' \u2022 Batch kharidne par unlock') + '</div></div><i class="fas fa-chevron-right ga-go"></i></div>';
+  }
+
+  /* ---------- classes view ---------- */
+  function notesHref(u){
+    if(!/^https?:\/\//i.test(u || '')) return '';
+    var m = u.match(/drive\.google\.com\/file\/d\/([\w-]+)/) || u.match(/drive\.google\.com\/.*[?&]id=([\w-]+)/);
+    return m ? 'https://drive.google.com/uc?export=download&id=' + m[1] : u;
+  }
+  function descOf(c){
+    if(c.mode === 'meet' || c.kind === 'meet') return { kind: 'meet', src: c.src, title: c.title };
+    if(c.kind === 'youtube'){ var id = null; try{ id = atob(c.src); }catch(e){} return { kind: 'youtube', id: id }; }
+    if(c.kind === 'direct') return { kind: 'video', src: c.src };
+    return { kind: 'iframe', src: c.src };
+  }
+  function emptyView(msg){
+    destroy();
+    g('gaStage').innerHTML = '<div class="ga-err"><div>' + msg + '</div></div>';
+    g('gaInfo').style.display = 'none'; g('gaPlh').style.display = 'none'; g('gaList').innerHTML = '';
+    D.cur = null; D.sig = '';
+  }
+  function renderList(list){
+    g('gaPlh').style.display = 'block';
+    g('gaList').innerHTML = list.map(function(c, i){
+      return '<div class="ga-item' + (c.id === D.cur ? ' on' : '') + '" data-id="' + E(c.id) + '"><div class="ga-num">' + (i + 1) + '</div><div class="ga-tx"><div class="ga-tt">' + E(c.title) + '</div><div class="ga-st">' + (isLive(c) ? '<span class="ga-lv">\u25CF LIVE</span>' : 'Recorded') + (c.notes ? ' \u2022 Notes' : '') + '</div></div></div>';
+    }).join('');
+  }
+  function renderInfo(c){
+    var n = notesHref(c.notes), live = isLive(c), el = g('gaInfo');
+    el.style.display = 'block';
+    el.innerHTML = '<span class="ga-tag ' + (live ? 'ga-t-live' : 'ga-t-rec') + '">' + (live ? '\u25CF LIVE' : 'RECORDED') + '</span><h2>' + E(c.title) + '</h2>' +
+      (n ? '<a class="ga-dl" target="_blank" rel="noopener" href="' + E(n) + '"><i class="fas fa-download"></i> Download Notes (PDF)</a>' : '');
+  }
+  function select(list, id, force){
+    var c = list.filter(function(x){ return x.id === id; })[0]; if(!c) return;
+    var sig = [c.id, c.mode, c.kind, c.src].join('|');
+    D.cur = id; renderList(list); renderInfo(c);
+    if(force || sig !== D.sig){ D.sig = sig; mount(g('gaStage'), descOf(c)); }
+  }
+  function renderClasses(restart){
+    if(!g('classes-view') || !g('classes-view').classList.contains('active')) return;
+    var b = D.filter && state.batches ? state.batches.filter(function(x){ return x.id === D.filter; })[0] : null;
+    g('gaClsTitle').textContent = b ? b.title : 'Live & Recorded Classes';
+    if(D.err && D.err.code === 'permission-denied') return emptyView('<b>Permission denied</b><br>Firestore rules me <b>classes</b> collection ka read allow karo.');
+    var list = visible().filter(function(c){ return !D.filter || c.batchId === D.filter; });
+    if(!list.length) return emptyView('Abhi koi class available nahi hai.');
+    var has = function(id){ return id && list.some(function(c){ return c.id === id; }); };
+    var pick = has(D.want) ? D.want : (has(D.cur) ? D.cur : (list.filter(isLive)[0] || list[0]).id);
+    D.want = null;
+    select(list, pick, !!restart);
+  }
+
+  function refresh(){ renderHome(); renderBatch(); renderClasses(false); }
+  function lite(){ renderHome(); renderBatch(); }
+
+  function open(batchId, classId){
+    var cur = document.querySelector('.view-section.active');
+    if(cur && cur.id !== 'classes-view') D.prev = cur.id;
+    D.filter = batchId || ''; D.want = classId || null;
+    start(); switchView('classes-view'); renderClasses(true);
+  }
+  function back(){
+    destroy();
+    var to = D.prev || 'home-view';
+    if(to === 'batch-detail-view' && state.currentBatch){ switchView(to); g('batchDetailTitle').textContent = state.currentBatch.title; renderBatchDetails(); }
+    else switchView(to === 'classes-view' ? 'home-view' : to);
+  }
+  function leave(){ destroy(); var s = g('gaStage'); if(s) s.innerHTML = ''; D.sig = ''; }
+
+  document.addEventListener('DOMContentLoaded', function(){ var l = g('gaList'); if(l) l.addEventListener('click', function(e){
+    var it = e.target.closest('.ga-item'); if(!it) return;
+    D.want = it.getAttribute('data-id'); renderClasses(true);
+    var mc = g('mainContent'); if(mc) mc.scrollTo({ top: 0, behavior: 'smooth' });
+  }); });
+  if(document.readyState !== 'loading'){ var l0 = g('gaList'); if(l0) l0.addEventListener('click', function(e){
+    var it = e.target.closest('.ga-item'); if(!it) return;
+    D.want = it.getAttribute('data-id'); renderClasses(true);
+    var mc = g('mainContent'); if(mc) mc.scrollTo({ top: 0, behavior: 'smooth' });
+  }); }
+
+  /* drawer entry (after "My Courses") */
+  (function(){
+    var dm = document.querySelector('.drawer-menu'); if(!dm || dm.querySelector('[data-ga]')) return;
+    var li = document.createElement('li'); li.setAttribute('data-ga', '1');
+    li.innerHTML = '<i class="fas fa-circle-play"></i> Live &amp; Recorded Classes';
+    li.onclick = function(){ open(); toggleDrawer(); };
+    dm.insertBefore(li, dm.children[2] || dm.lastElementChild);
+  })();
+
+  return { start: start, stop: stop, open: open, back: back, leave: leave, destroy: destroy, lite: lite, refresh: refresh };
+})();
 </script>
+
 </body>
 </html>
