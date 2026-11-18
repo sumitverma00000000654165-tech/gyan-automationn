@@ -1515,6 +1515,8 @@ body.show-site #pc-site.menu-open{overflow:hidden}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js"></script>
 
 <script>
@@ -2044,7 +2046,7 @@ function initiateBuy() {
             .then(() => { toast('Enrolled successfully!'); refreshCurrent(); });
         return;
     }
-    state.paymentMethod = 'upi';
+    state.paymentMethod = 'razorpay';
     openPayment();
 }
 
@@ -2055,7 +2057,8 @@ function openPayment() {
         <div class="pay-amount">${fmtPrice(b.price)}</div>
         <div class="pay-batch">${esc(b.title)}</div>
         <div class="pay-methods">
-            <div class="pay-method active" data-method="upi" onclick="selectPayMethod('upi')"><i class="fas fa-mobile-alt"></i> UPI</div>
+            <div class="pay-method active" data-method="razorpay" onclick="selectPayMethod('razorpay')"><i class="fas fa-credit-card"></i> Pay Online</div>
+            <div class="pay-method" data-method="upi" onclick="selectPayMethod('upi')"><i class="fas fa-mobile-alt"></i> Manual UPI</div>
         </div>
         <div id="payPanel"></div>
         <button class="pay-btn" id="payBtn" onclick="processPayment()"><i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}</button>
@@ -2073,7 +2076,13 @@ function selectPayMethod(m) {
 function renderPayPanel() {
     const b = state.currentBatch;
     const panel = $('payPanel'); if(!panel) return;
-    if(state.paymentMethod === 'upi') {
+    if(state.paymentMethod === 'razorpay') {
+        panel.innerHTML = `
+            <div class="pay-panel">
+                <p class="pay-note"><i class="fas fa-shield-alt"></i> Pay securely with UPI, Card or NetBanking via Razorpay. Your course unlocks automatically after payment.</p>
+            </div>
+        `;
+    } else if(state.paymentMethod === 'upi') {
         panel.innerHTML = `
             <div class="pay-panel">
                 <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:8px;">Pay to UPI ID</label>
@@ -2125,6 +2134,7 @@ async function processPayment() {
     const b = state.currentBatch;
     const btn = $('payBtn');
     
+    if(state.paymentMethod === 'razorpay') return payWithRazorpay(b, btn);
     if(state.paymentMethod === 'upi') {
         const utr = $('utrInput') ? $('utrInput').value.trim() : '';
         if(utr.length < 6) return toast('Please enter valid UTR number (min 6 digits)');
@@ -2153,6 +2163,73 @@ async function processPayment() {
     } else {
         toast('This method is coming soon. Please use UPI.');
     }
+}
+
+/* ================= RAZORPAY CHECKOUT (secure: Firebase Cloud Functions) ================= */
+/* Key Secret sirf server (Cloud Functions) me hai. Yahan kuch secret nahi hai. */
+const fnApi = firebase.app().functions('asia-south1');
+
+function resetPayBtn(btn, b) { btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false; state.processing = false; }
+
+async function payWithRazorpay(b, btn) {
+    if(typeof Razorpay === 'undefined') return toast('Payment script load nahi hua. Internet check karke dobara try karo.');
+    if(!state.user) return toast('Pehle login karo');
+
+    state.processing = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; btn.disabled = true;
+
+    let order;
+    try { order = (await fnApi.httpsCallable('createOrder')({ batchId: b.id })).data; }
+    catch(e) { toast('Order create nahi hua: ' + (e.message || 'error')); return resetPayBtn(btn, b); }
+
+    const email = (state.user.email && state.user.email.indexOf(PHONE_DOMAIN) === -1) ? state.user.email : '';
+    const phone = (state.profile && state.profile.phone) || '';
+    const userName = (state.profile && state.profile.name) || '';
+    let paid = false;
+
+    const rzp = new Razorpay({
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.order_id,
+        name: 'Gyan Automation',
+        description: b.title,
+        prefill: { name: userName, email: email, contact: phone },
+        theme: { color: '#2563eb' },
+        handler: async function(resp) {
+            paid = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying Payment...';
+            let ok = false, err = '';
+            for(let i = 0; i < 3 && !ok; i++) {
+                try {
+                    await fnApi.httpsCallable('verifyPayment')({
+                        razorpay_payment_id: resp.razorpay_payment_id,
+                        razorpay_order_id: resp.razorpay_order_id,
+                        razorpay_signature: resp.razorpay_signature
+                    });
+                    ok = true;
+                } catch(e) {
+                    err = e.message || 'error';
+                    if(e.code === 'functions/permission-denied' || e.code === 'functions/not-found') break;
+                    await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+                }
+            }
+            if(ok) {
+                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check"><i class="fas fa-check"></i></div><h3>Payment Successful!</h3><p>Your batch is now unlocked.</p><div class="pay-receipt">Payment ID: ${esc(resp.razorpay_payment_id)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Done</button></div>`;
+                state.processing = false;
+                setTimeout(() => { $('payOverlay').classList.remove('active'); refreshCurrent(); }, 2000);
+            } else {
+                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check" style="background:#f59e0b"><i class="fas fa-exclamation"></i></div><h3>Payment Received</h3><p>Verification abhi complete nahi hua (${esc(err)}). Paisa safe hai. Is Payment ID ke saath support se contact karo, batch jaldi unlock kar diya jayega.</p><div class="pay-receipt">Payment ID: ${esc(resp.razorpay_payment_id)}<br>Order ID: ${esc(resp.razorpay_order_id)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Close</button></div>`;
+                state.processing = false;
+            }
+        },
+        modal: { ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
+    });
+    rzp.on('payment.failed', function(r) {
+        toast('Payment failed: ' + ((r.error && r.error.description) || 'try again'));
+        resetPayBtn(btn, b);
+    });
+    try { rzp.open(); } catch(e) { toast('Checkout open nahi hua: ' + e.message); resetPayBtn(btn, b); }
 }
 
 /* ================= CATEGORY ================= */
