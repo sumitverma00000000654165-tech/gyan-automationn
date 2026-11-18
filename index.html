@@ -434,9 +434,255 @@ body{display:block;height:100vh;height:100dvh;overflow:hidden;}
 .in-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#818cf8);border-radius:4px;animation:inLoad 5.2s linear forwards;}
 @keyframes inLoad{to{width:100%;}}
 .in-skip{font-size:11px;color:#64748b;letter-spacing:1px;animation:inFade .6s 1.6s both;}
+
+/* ================= PC WEBSITE (>=900px only) ================= */
+#pc-site{display:none}
+.ps-back{display:none}
+@media(min-width:900px){
+.ps-back{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#94a3b8;cursor:pointer;margin-bottom:12px}
+.ps-back:hover{color:#38bdf8}
+body.show-site #pc-site{display:block;position:fixed;inset:0;z-index:3000;overflow-y:auto;overflow-x:hidden;background:#fff;color:#0f172a;scroll-behavior:smooth}
+#pc-site{--navy:#0b1b3a;--blue:#2563eb;--sky:#0ea5e9;--amber:#f59e0b;--soft:#eff6ff}
+#pc-site a{cursor:pointer;text-decoration:none}
+.ps-w{max-width:1320px;margin:0 auto;padding:0 32px}
+.ps-sec{padding:70px 0;scroll-margin-top:84px}
+.ps-h{font-size:clamp(28px,3vw,42px);font-weight:800;text-align:center;letter-spacing:-.5px;color:var(--navy)}
+.ps-h b{color:var(--blue)}
+.ps-sub{text-align:center;color:#64748b;max-width:720px;margin:10px auto 36px;font-size:15px;line-height:1.7}
+/* header */
+.ps-head{position:sticky;top:0;z-index:50;background:#fff;height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;box-shadow:0 2px 14px rgba(15,23,42,.08)}
+.ps-logo{display:flex;align-items:center;gap:11px;font-size:27px;font-weight:800;letter-spacing:-.5px;color:var(--navy)}
+.ps-logo b{color:var(--blue);font-weight:800}
+.ps-mark{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;overflow:hidden;box-shadow:0 6px 16px rgba(37,99,235,.35)}
+.ps-mark img{width:100%;height:100%;object-fit:cover;display:none}
+.ps-nav{display:flex;align-items:center;gap:34px;font-weight:600;font-size:17px}
+.ps-nav>a,.ps-dd>a{display:inline-flex;align-items:center;gap:6px;color:#0f172a;transition:color .2s}
+.ps-nav>a:hover,.ps-dd:hover>a,.ps-nav>a.on{color:var(--blue)}
+.ps-dd{position:relative;padding:28px 0}
+.ps-dd>a i{font-size:11px}
+.ps-menu{display:none;position:absolute;right:-20px;top:calc(100% - 6px);min-width:290px;background:var(--navy);border-radius:14px;padding:12px 0;box-shadow:0 18px 40px rgba(11,27,58,.35)}
+.ps-dd:hover .ps-menu{display:block;animation:psIn .22s ease}
+@keyframes psIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ps-menu a{display:flex;align-items:center;gap:12px;padding:13px 26px;color:#fff;font-size:16px;font-weight:600}
+.ps-menu a i{width:18px;color:var(--sky);font-size:14px}
+.ps-menu a:hover{background:rgba(255,255,255,.08)}
+.ps-menu a.vc{color:#fcd34d}.ps-menu a.vc i{color:#fcd34d}
+.ps-search{display:flex;align-items:center;gap:8px;border:1.5px solid #0f172a;border-radius:30px;padding:0 16px;height:44px;width:230px}
+.ps-search input{border:0;outline:0;font-size:15px;font-weight:600;width:100%;background:none}
+#pc-site .ps-um{background:#fff;min-width:310px;right:0;padding:10px;border-radius:16px;box-shadow:0 18px 44px rgba(15,23,42,.22)}
+#pc-site .ps-um a{color:#0f172a;border-radius:12px;padding:14px 16px;font-size:16px}
+#pc-site .ps-um a:hover{background:#f1f5f9}
+.ps-ui{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;background:#fee2e2;color:#dc2626}
+.ps-ui.b{background:#dbeafe;color:#2563eb}
+.ps-user{min-width:36px;min-height:36px;border:0;background:none;font-size:34px;color:var(--navy);cursor:pointer;transition:.2s}
+.ps-user:hover{color:var(--blue);transform:scale(1.08)}
+/* banners */
+.ps-ban{padding:34px 0 18px;background:#f8fafc}
+.ps-view{overflow:hidden;border-radius:18px}
+.ps-track{display:flex;gap:20px;transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.ps-bn{background-color:#1e3a8a;flex:0 0 calc((100% - (var(--pv) - 1)*20px)/var(--pv));aspect-ratio:16/7.2;border-radius:18px;overflow:hidden;position:relative;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:20px;background-size:cover;background-position:center;box-shadow:0 10px 26px rgba(15,23,42,.18);font-weight:800;font-size:22px;line-height:1.2}
+.ps-bn small{font-size:13px;font-weight:600;opacity:.9;margin-top:4px}
+.ps-dots{display:flex;justify-content:center;gap:10px;margin-top:20px}
+.ps-dots i{width:10px;height:10px;border-radius:50%;background:#cbd5e1;cursor:pointer;transition:.3s}
+.ps-dots i.on{background:var(--navy);transform:scale(1.25)}
+/* hero */
+.ps-hero{position:relative;background:radial-gradient(circle at 75% 30%,#13407a 0%,#0b1b3a 55%,#060f22 100%);color:#fff;overflow:hidden;padding:70px 0 130px}
+.ps-hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(56,189,248,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.06) 1px,transparent 1px);background-size:44px 44px}
+.ps-hero::after{content:"";position:absolute;left:-10%;right:-10%;bottom:-90px;height:170px;background:var(--blue);border-radius:50%;box-shadow:0 -14px 0 #1d4ed8}
+.ps-hero-in{position:relative;z-index:2;display:grid;grid-template-columns:1.25fr 1fr;gap:40px;align-items:center}
+.ps-hero h1{font-size:clamp(54px,7vw,104px);line-height:.98;font-weight:800;letter-spacing:-2px}
+.ps-hero h1 span{background:linear-gradient(90deg,#38bdf8,#818cf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ps-hero h2{font-size:clamp(22px,2.4vw,34px);font-weight:700;margin:26px 0 10px;line-height:1.25}
+.ps-hero p{color:#cbd5e1;font-size:17px;max-width:640px;line-height:1.7}
+.ps-cta{display:flex;align-items:center;gap:22px;margin-top:34px;flex-wrap:wrap}
+.ps-cta button{border:0;border-radius:18px;padding:20px 38px;font-size:18px;font-weight:800;font-style:italic;cursor:pointer;font-family:inherit;transition:.25s}
+.ps-b1{background:#e2e8f0;color:#0b1b3a;box-shadow:0 7px 0 #94a3b8}
+.ps-b2{background:var(--amber);color:#0b1b3a;box-shadow:0 7px 0 #b45309}
+.ps-cta button:hover{transform:translateY(-3px)}
+.ps-avs{display:flex;align-items:center}
+.ps-avs span{width:58px;height:58px;border-radius:50%;border:3px solid #fff;margin-right:-16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px}
+.ps-avs em{width:66px;height:66px;border-radius:50%;background:#fff;color:var(--navy);font-style:normal;font-weight:800;font-size:19px;display:flex;align-items:center;justify-content:center;z-index:2}
+.ps-art{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ps-chip{background:rgba(255,255,255,.07);border:1px solid rgba(125,211,252,.35);border-radius:18px;padding:24px 20px;backdrop-filter:blur(8px);text-align:center;animation:psFloat 4s ease-in-out infinite}
+.ps-chip:nth-child(2n){animation-delay:-2s;margin-top:26px}
+.ps-chip i{font-size:34px;color:#38bdf8;margin-bottom:10px}
+.ps-chip b{display:block;font-size:20px}.ps-chip small{color:#94a3b8;font-size:12.5px}
+@keyframes psFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+/* compare */
+.ps-cmp{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:1040px;margin:0 auto}
+.ps-cc{border-radius:26px;background:#fff;box-shadow:0 14px 40px rgba(15,23,42,.1);overflow:hidden;border:1px solid #e2e8f0}
+.ps-cc header{padding:22px 26px;font-size:26px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--blue),var(--navy))}
+.ps-cc.o header{background:linear-gradient(135deg,#475569,#1e293b)}
+.ps-cc header small{display:block;font-size:14px;font-weight:500;opacity:.85}
+.ps-cc ul{list-style:none;padding:8px 26px 18px}
+.ps-cc li{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid #eef2f6;font-size:15px;line-height:1.5}
+.ps-cc li:last-child{border:0}
+.ps-cc li i{margin-top:4px;color:var(--blue)}.ps-cc.o li i{color:#94a3b8}
+.ps-cc li b{display:block;color:#0f172a}.ps-cc.o li{color:#64748b;font-style:italic}
+.ps-cc li span{font-size:13px;color:#64748b;font-weight:400}
+/* records */
+.ps-rec{background:linear-gradient(135deg,#0b1b3a,#1d4ed8);border-radius:30px;color:#fff;padding:48px;display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;position:relative;overflow:hidden}
+.ps-rec h3{font-size:19px;font-weight:500;opacity:.9}
+.ps-rec h2{font-size:clamp(40px,5vw,72px);font-weight:800;line-height:1;color:#fcd34d;margin:8px 0 14px}
+.ps-rec p{font-size:17px;line-height:1.7;opacity:.9}
+.ps-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.ps-st{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:18px;padding:22px;text-align:center}
+.ps-st b{display:block;font-size:36px;font-weight:800;color:#fcd34d}.ps-st span{font-size:13.5px;opacity:.9}
+/* tiles (lab / projects) */
+.ps-box{border:1px solid #fecdd3;border:1px solid #bfdbfe;border-radius:26px;padding:34px;background:linear-gradient(180deg,#fff,var(--soft))}
+.ps-tag{display:inline-block;background:var(--blue);color:#fff;font-weight:800;font-style:italic;font-size:26px;padding:8px 24px;border-radius:10px;margin-bottom:14px}
+.ps-tiles{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:22px}
+.ps-tile{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:4/3;background:linear-gradient(135deg,#1e3a8a,#0ea5e9);display:flex;align-items:center;justify-content:center;border:1px solid #bfdbfe;transition:.3s;background-size:cover;background-position:center}
+.ps-tile:hover{transform:translateY(-6px);box-shadow:0 18px 36px rgba(37,99,235,.25)}
+.ps-tile>i{font-size:78px;color:rgba(255,255,255,.35)}
+.ps-tile em{position:absolute;left:0;top:0;background:var(--navy);color:#fff;font-weight:800;font-size:22px;padding:9px 24px;border-radius:0 0 18px 0}
+/* features */
+.ps-feat{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
+.ps-f{background:#fff;border-radius:26px;padding:36px 28px;text-align:center;box-shadow:0 14px 34px rgba(15,23,42,.09);position:relative;overflow:hidden;min-height:330px}
+.ps-f::after{content:"";position:absolute;left:50%;bottom:-70px;width:200px;height:110px;margin-left:-100px;background:var(--amber);border-radius:50%;filter:blur(2px)}
+.ps-f h4{font-size:54px;font-weight:800;color:var(--blue);line-height:1}
+.ps-f h5{font-size:20px;margin:12px 0;font-weight:700}
+.ps-f p{color:#64748b;font-size:14.5px;line-height:1.7}
+.ps-band{background:linear-gradient(180deg,#f1f5f9,#f1f5f9);position:relative}
+/* certification */
+.ps-cert{display:grid;grid-template-columns:1fr 1.05fr;gap:50px;align-items:center}
+.ps-cert small{color:var(--blue);font-weight:700;font-size:20px}
+.ps-cert h2{font-size:clamp(36px,4.2vw,60px);font-weight:800;margin:6px 0 18px;line-height:1.1}
+.ps-cert p{color:#475569;line-height:1.8;font-size:16px;margin-bottom:24px}
+.ps-vbtn{display:inline-flex;align-items:center;gap:10px;background:var(--navy);color:#fff!important;padding:15px 30px;border-radius:14px;font-weight:700;border:0;cursor:pointer;font-size:16px;font-family:inherit;transition:.25s}
+.ps-vbtn:hover{background:var(--blue);transform:translateY(-3px)}
+.ps-cg{display:grid;grid-template-columns:1fr 1fr;gap:20px;background:#fff;border-radius:28px;padding:28px;box-shadow:0 18px 44px rgba(15,23,42,.12)}
+.ps-cd{border:3px double #93c5fd;border-radius:10px;padding:16px;text-align:center;background:linear-gradient(135deg,#fff,#eff6ff);position:relative}
+.ps-cd i{font-size:26px;color:var(--blue)}
+.ps-cd b{display:block;font-size:13px;color:var(--navy);margin:6px 0 2px}
+.ps-cd em{display:block;font-style:normal;font-weight:800;font-size:15px;color:#1d4ed8;margin:8px 0}
+.ps-cd span{display:block;font-size:10.5px;color:#64748b;line-height:1.6}
+/* marquee */
+.ps-al{background:linear-gradient(135deg,#1d4ed8,#0b1b3a);color:#fff;padding:60px 0;overflow:hidden;border-radius:0}
+.ps-al h3{text-align:center;font-size:30px;font-weight:700;margin-bottom:30px}
+.ps-mq{display:flex;gap:18px;width:max-content;animation:psMq 28s linear infinite;margin-bottom:18px}
+.ps-mq.r{animation-direction:reverse}
+.ps-mq span{background:#fff;color:var(--navy);font-weight:800;border-radius:14px;padding:18px 34px;font-size:17px;white-space:nowrap}
+@keyframes psMq{to{transform:translateX(-50%)}}
+/* placements */
+.ps-pl{display:flex;gap:22px;overflow-x:auto;padding:6px 4px 20px;scrollbar-width:thin}
+.ps-pc{flex:0 0 250px;border-radius:18px;border-top:4px solid var(--blue);background:#fff;box-shadow:0 10px 26px rgba(15,23,42,.09);overflow:hidden}
+.ps-pc .ph{height:230px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:82px;color:#cbd5e1;background-size:cover;background-position:center}
+.ps-pc div.in{padding:16px 18px;font-size:13px;color:#64748b;line-height:1.8}
+.ps-pc div.in b{display:block;color:#0f172a;font-size:17px;margin-bottom:6px}
+/* reviews */
+.ps-rv{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.ps-rc{border-radius:22px;background:linear-gradient(160deg,#0b1b3a,#1e3a8a);color:#fff;aspect-ratio:9/12;padding:24px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;transition:.3s}
+.ps-rc:hover{transform:translateY(-6px)}
+.ps-rc b{font-size:22px;line-height:1.3}
+.ps-rc i{align-self:center;font-size:72px;color:rgba(255,255,255,.85)}
+.ps-rc small{opacity:.8}
+/* apps */
+.ps-apps{background:linear-gradient(135deg,#1d4ed8,#0b1b3a);padding:60px 0}
+.ps-ag{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.ps-ac{background:#fff;border-radius:30px;padding:38px;min-height:290px;position:relative;overflow:hidden}
+.ps-ac h3{font-size:27px;font-weight:800;line-height:1.3;max-width:80%}
+.ps-ac h3 b{color:var(--blue)}
+.ps-ac p{color:#64748b;font-size:16px;line-height:1.7;margin:12px 0 22px;max-width:62%}
+.ps-st-btn{display:inline-flex;align-items:center;gap:10px;background:#000;color:#fff!important;padding:12px 22px;border-radius:12px;font-weight:700;margin:0 10px 10px 0}
+.ps-ac>i{position:absolute;right:34px;bottom:14px;font-size:150px;color:#dbeafe}
+/* footer */
+.ps-foot{background:#060f22;color:#cbd5e1;padding:56px 0 24px}
+.ps-fg{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:40px}
+.ps-foot h6{color:#fff;font-size:17px;margin-bottom:16px}
+.ps-foot a{display:block;padding:6px 0;font-size:14.5px;color:#94a3b8}
+.ps-foot a:hover{color:#38bdf8}
+.ps-foot p{font-size:14px;line-height:1.8;color:#94a3b8}
+.ps-copy{border-top:1px solid #1e293b;margin-top:36px;padding-top:20px;text-align:center;font-size:13px;color:#64748b}
+.ps-wa{position:fixed;right:28px;bottom:28px;z-index:60;width:66px;height:66px;border-radius:50%;background:#25d366;color:#fff!important;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 10px 28px rgba(37,211,102,.5);animation:psPulse 2.4s infinite}
+@keyframes psPulse{0%{box-shadow:0 0 0 0 rgba(37,211,102,.55)}100%{box-shadow:0 0 0 24px rgba(37,211,102,0)}}
+/* courses */
+.ps-cr{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.ps-co{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:30px;transition:.3s}
+.ps-co:hover{transform:translateY(-6px);box-shadow:0 18px 38px rgba(37,99,235,.16);border-color:#93c5fd}
+.ps-co h4{font-size:21px;margin-bottom:8px}.ps-co p{color:#64748b;font-size:14.5px;line-height:1.7;margin-bottom:16px}
+.ps-co a{color:var(--c)!important;font-weight:700;font-size:14.5px;display:inline-flex;align-items:center;gap:8px}
+/* modal */
+#psModal{position:fixed;inset:0;z-index:100;background:rgba(6,15,34,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center}
+#psModal.on{display:flex}
+.ps-md{width:min(520px,92vw);background:#fff;border-radius:24px;padding:34px;position:relative;animation:psIn .3s ease;max-height:90vh;overflow:auto}
+.ps-md h3{font-size:24px;font-weight:800;margin-bottom:6px;color:var(--navy)}
+.ps-md>p{color:#64748b;font-size:14px;margin-bottom:18px}
+.ps-x{position:absolute;right:18px;top:16px;border:0;background:#f1f5f9;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px}
+.ps-in{width:100%;padding:15px 16px;border:1.5px solid #cbd5e1;border-radius:12px;font-size:15px;font-family:inherit;outline:0;margin-bottom:12px}
+.ps-in:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.ps-res{margin-top:16px;border-radius:14px;padding:16px 18px;font-size:14.5px;line-height:1.8}
+.ps-res.ok{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46}
+.ps-res.no{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+.ps-res b{color:#0f172a}
+/* ---- v3: colours + animations ---- */
+@keyframes psUp{from{opacity:0;transform:translateY(36px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes psGrid{to{background-position:44px 44px}}
+@keyframes psShift{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+@keyframes psGlow{to{transform:translate(22%,18%)}}
+.ps-pre{opacity:0}
+.ps-show{animation:psUp .8s cubic-bezier(.2,.7,.2,1) backwards}
+.ps-hero::before{animation:psGrid 18s linear infinite}
+.ps-h{position:relative;padding-bottom:16px}
+.ps-h::after{content:"";position:absolute;left:50%;bottom:0;width:90px;height:5px;margin-left:-45px;border-radius:5px;background:linear-gradient(90deg,#0ea5e9,#7c3aed,#f59e0b);background-size:200% 100%;animation:psShift 3s linear infinite}
+.ps-rec{background:linear-gradient(120deg,#0b1b3a,#1d4ed8,#7c3aed,#0b1b3a);background-size:300% 300%;animation:psShift 14s ease infinite}
+.ps-st{transition:.3s}.ps-st:hover{transform:translateY(-6px) scale(1.04);background:rgba(255,255,255,.18)}
+/* courses */
+.ps-co{position:relative;overflow:hidden;border-top:4px solid var(--c)}
+.ps-co::before{content:"";position:absolute;right:-40px;top:-40px;width:130px;height:130px;border-radius:50%;background:var(--bg);transition:.4s}
+.ps-co:hover::before{transform:scale(2.4)}
+.ps-co{display:flex;flex-direction:column}.ps-co>*{position:relative}.ps-co p{flex:1}
+.ps-ci{width:60px;height:60px;border-radius:18px;background:var(--bg);color:var(--c);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:18px;transition:.4s}
+.ps-co:hover .ps-ci{background:var(--c);color:#fff;transform:rotate(-8deg) scale(1.08)}
+.ps-co h4{color:#0f172a}
+.ps-co a i{transition:transform .3s}.ps-co a:hover i{transform:translateX(6px)}
+/* lab / project tiles */
+.ps-tiles.c3{grid-template-columns:repeat(3,1fr)}.ps-tiles.c4{grid-template-columns:repeat(4,1fr)}
+.ps-tiles{gap:22px}
+.ps-tile{aspect-ratio:16/11;--a:#1e3a8a;--b:#0ea5e9;border:0}
+.ps-tile:nth-child(5n+2){--a:#6d28d9;--b:#ec4899}
+.ps-tile:nth-child(5n+3){--a:#047857;--b:#34d399}
+.ps-tile:nth-child(5n+4){--a:#c2410c;--b:#fbbf24}
+.ps-tile:nth-child(5n+5){--a:#0e7490;--b:#6366f1}
+.ps-tile:not([style*="url"]){background:linear-gradient(135deg,var(--a),var(--b),var(--a));background-size:220% 220%;animation:psShift 8s ease infinite}
+.ps-tile.ps-show:not([style*="url"]){animation:psUp .8s cubic-bezier(.2,.7,.2,1) backwards,psShift 8s ease infinite}
+.ps-tile>i{font-size:64px;color:rgba(255,255,255,.55);transition:.5s;filter:drop-shadow(0 8px 14px rgba(0,0,0,.25))}
+.ps-tile:hover>i{transform:scale(1.25) rotate(-6deg);color:#fff}
+.ps-tile::before{content:"";position:absolute;width:150%;height:150%;left:-25%;top:-25%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.28),transparent 40%);animation:psGlow 6s ease-in-out infinite alternate;pointer-events:none}
+.ps-tile::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);transform:translateX(-120%);transition:transform .8s}
+.ps-tile:hover::after{transform:translateX(120%)}
+.ps-tile em{z-index:2;font-size:17px;padding:8px 20px;background:rgba(11,27,58,.9);border-radius:0 0 16px 0}
+.ps-tiles.c4 .ps-tile em{font-size:15px;padding:7px 16px}
+/* features */
+.ps-f{transition:.35s;border-top:5px solid var(--k,#2563eb)}
+.ps-f:nth-child(1){--k:#2563eb}.ps-f:nth-child(2){--k:#10b981}.ps-f:nth-child(3){--k:#7c3aed}.ps-f:nth-child(4){--k:#f59e0b}
+.ps-f:hover{transform:translateY(-10px);box-shadow:0 24px 48px rgba(15,23,42,.16)}
+.ps-f h4{background:linear-gradient(135deg,var(--k),#0b1b3a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ps-f::after{background:var(--k);opacity:.85;animation:psFloat 5s ease-in-out infinite}
+/* certificates */
+.ps-cd.has-img{padding:6px;display:flex;align-items:center}.ps-cd.has-img img{width:100%;height:auto;display:block;border-radius:6px}
+.ps-cd{transition:.35s}.ps-cd:hover{transform:translateY(-6px) rotate(-1deg);box-shadow:0 14px 30px rgba(37,99,235,.2)}
+.ps-cd i{animation:psFloat 3.5s ease-in-out infinite}
+.ps-cd:nth-child(2) i,.ps-cd:nth-child(3) i{color:#f59e0b}
+/* demo band */
+.ps-cta2{background:linear-gradient(120deg,#f59e0b,#f97316,#ef4444,#f59e0b);background-size:300% 300%;animation:psShift 10s ease infinite;color:#fff;padding:46px 0}
+.ps-cta2 .ps-w{display:flex;align-items:center;justify-content:space-between;gap:30px}
+.ps-cta2 h2{font-size:clamp(26px,3vw,38px);font-weight:800}.ps-cta2 p{font-size:16px;opacity:.95;margin-top:6px}
+.ps-dbtn{background:#fff;color:#c2410c!important;font-weight:800;font-size:18px;padding:18px 36px;border-radius:50px;display:inline-flex;align-items:center;gap:12px;box-shadow:0 10px 26px rgba(0,0,0,.22);transition:.3s;white-space:nowrap}
+.ps-dbtn:hover{transform:translateY(-4px) scale(1.04)}
+.ps-dbtn i{color:#16a34a;font-size:24px}
+/* app cards */
+.ps-apps{background:linear-gradient(120deg,#1d4ed8,#0b1b3a,#4c1d95);background-size:250% 250%;animation:psShift 16s ease infinite}
+.ps-ac{transition:.35s}.ps-ac:hover{transform:translateY(-8px)}
+.ps-ac>i{animation:psFloat 4.5s ease-in-out infinite;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.45}
+.ps-ac:last-child>i{background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;background-clip:text}
+.ps-ac>i{font-size:120px}
+.ps-st-btn{transition:.25s}.ps-st-btn:hover{transform:translateY(-3px);background:#2563eb}
+.ps-wa{animation:psPulse 2.4s infinite,psFloat 4s ease-in-out infinite}
+}
 </style>
 </head>
-<body>
+<body class="show-site">
 
 
 <!-- INTRO ANIMATION (phones) -->
@@ -540,6 +786,7 @@ body{display:block;height:100vh;height:100dvh;overflow:hidden;}
         </div>
 
         <div class="auth-card">
+            <div class="ps-back" onclick="psBack()"><i class="fas fa-arrow-left"></i> Back to website</div>
             <div class="auth-logo">
                 <i class="fas fa-robot" id="loginLogoIcon"></i>
                 <img id="loginLogoImg" src="" alt="Logo">
@@ -784,6 +1031,118 @@ body{display:block;height:100vh;height:100dvh;overflow:hidden;}
     <div class="toast" id="toast"></div>
 </div>
 
+
+<!-- ================= PC WEBSITE (only >=900px, phone untouched) ================= -->
+<div id="pc-site">
+<header class="ps-head">
+  <a class="ps-logo" onclick="psGo('top')"><span class="ps-mark"><img id="psLogoImg" alt=""><i class="fas fa-bolt" id="psLogoIcon"></i></span><span>GYAN <b>AUTOMATION</b></span></a>
+  <nav class="ps-nav">
+    <a class="on" onclick="psGo('top')">Home</a>
+    <div class="ps-dd"><a>Training <i class="fas fa-chevron-down"></i></a>
+      <div class="ps-menu">
+        <a onclick="psLogin()"><i class="fas fa-laptop"></i>Online Training</a>
+        <a onclick="psGo('lab')"><i class="fas fa-building"></i>Offline Training</a>
+        <a onclick="psGo('courses')"><i class="fas fa-book-open"></i>All Courses</a>
+      </div></div>
+    <a onclick="psGo('about')">About Us</a>
+    <div class="ps-dd"><a>More <i class="fas fa-chevron-down"></i></a>
+      <div class="ps-menu">
+        <a onclick="psGo('apps')"><i class="fas fa-book"></i>E-Books &amp; Store</a>
+        <a onclick="psGo('lab')"><i class="fas fa-images"></i>Gallery</a>
+        <a onclick="psGo('why')"><i class="fas fa-circle-question"></i>Why Gyan Automation</a>
+        <a onclick="psGo('lab')"><i class="fas fa-flask"></i>Lab Setup</a>
+        <a onclick="psSoon('Blogs')"><i class="fas fa-pen-nib"></i>Blogs</a>
+        <a onclick="psCalc()"><i class="fas fa-calculator"></i>Calculator</a>
+        <a class="vc" onclick="psVerify()"><i class="fas fa-certificate"></i>Verify Certificate</a>
+      </div></div>
+    <div class="ps-search"><i class="fas fa-search"></i><input id="psSearch" placeholder="search..." autocomplete="off"></div>
+    <div class="ps-dd ps-ud" onmouseenter="psUm()"><button class="ps-user" title="Login" onclick="psUm()"><i class="far fa-user-circle"></i></button><div class="ps-menu ps-um" id="psUm"></div></div>
+  </nav>
+</header>
+
+<section class="ps-ban"><div class="ps-w"><div class="ps-view"><div class="ps-track" id="psTrack"></div></div><div class="ps-dots" id="psDots"></div></div></section>
+
+<section class="ps-hero" id="top"><div class="ps-w ps-hero-in">
+  <div>
+    <h1>GYAN<br><span>AUTOMATION</span></h1>
+    <h2>Practical PLC &bull; SCADA &bull; VFD Automation Training</h2>
+    <p>Industry-style labs, live projects, recorded classes and interview preparation &mdash; sab kuch ek hi jagah.</p>
+    <div class="ps-cta">
+      <button class="ps-b1" onclick="psLogin()">ONLINE TRAINING</button>
+      <button class="ps-b2" onclick="psGo('lab')">OFFLINE TRAINING</button>
+      <div class="ps-avs"><span style="background:#2563eb"><i class="fas fa-user"></i></span><span style="background:#0ea5e9;margin-left:0"><i class="fas fa-user-graduate"></i></span><em id="psAvCount">+99</em></div>
+    </div>
+  </div>
+  <div class="ps-art">
+    <div class="ps-chip"><i class="fas fa-microchip"></i><b>PLC</b><small>Siemens &bull; Delta &bull; AB</small></div>
+    <div class="ps-chip"><i class="fas fa-network-wired"></i><b>SCADA</b><small>Monitoring &amp; Control</small></div>
+    <div class="ps-chip"><i class="fas fa-bolt"></i><b>VFD</b><small>Drive Programming</small></div>
+    <div class="ps-chip"><i class="fas fa-desktop"></i><b>HMI</b><small>Panel Design</small></div>
+  </div>
+</div></section>
+
+<section class="ps-sec" id="why"><div class="ps-w">
+  <h2 class="ps-h">Why Choose <b>Gyan Automation</b></h2>
+  <p class="ps-sub">Seekhna sirf theory nahi &mdash; hands-on practice, projects aur job-readiness par focus.</p>
+  <div class="ps-cmp" id="psCmp"></div>
+</div></section>
+
+<section class="ps-sec" id="about" style="padding-top:20px"><div class="ps-w"><div class="ps-rec">
+  <div><h3>Our Records That Make Us</h3><h2>TRUSTED<br>INSTITUTE</h2><p id="psAbout"></p></div>
+  <div class="ps-stats" id="psStats"></div>
+</div></div></section>
+
+<section class="ps-sec" id="courses" style="padding-top:20px"><div class="ps-w">
+  <h2 class="ps-h">Our Training <b>Programs</b></h2>
+  <p class="ps-sub">Basic se advanced tak &mdash; apna course chuno aur login karke start karo.</p>
+  <div class="ps-cr" id="psCourses"></div>
+</div></section>
+
+<section class="ps-sec" id="lab" style="padding-top:20px"><div class="ps-w">
+  <div class="ps-box"><span class="ps-tag">LAB SET-UP</span>
+    <p style="color:#475569;font-size:15px;line-height:1.7">Advanced automation lab with industry-standard equipment &mdash; hands-on practical training ke liye.</p>
+    <div class="ps-tiles c3" id="psLab"></div></div>
+</div></section>
+
+<section class="ps-sec" style="padding-top:20px"><div class="ps-w">
+  <div class="ps-box"><span class="ps-tag">LIVE INDUSTRIAL PROJECTS</span>
+    <p style="color:#475569;font-size:15px;line-height:1.7">Real-time industrial applications par project banao aur apni automation skills prove karo.</p>
+    <div class="ps-tiles c4" id="psProj"></div></div>
+</div></section>
+
+<section class="ps-sec ps-band"><div class="ps-w"><div class="ps-feat" id="psFeat"></div></div></section>
+
+<section class="ps-sec"><div class="ps-w ps-cert">
+  <div><small>Our Certifications</small><h2>Certified Programs</h2>
+    <p>Gyan Automation me hum RLC, PLC, VFD, HMI aur SCADA jaise industrial automation topics par practical training dete hain. Course complete hone par student ko certificate milta hai, jise koi bhi online verify kar sakta hai.</p>
+    <button class="ps-vbtn" onclick="psVerify()"><i class="fas fa-certificate"></i> Verify Certificate</button></div>
+  <div class="ps-cg" id="psCg"></div>
+</div></section>
+
+
+
+
+<section class="ps-cta2"><div class="ps-w"><div><h2>Free Demo Class Book Karo</h2><p>Admission se pehle training khud experience karo &mdash; WhatsApp par message karo.</p></div><a class="ps-dbtn" id="psDemo" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> Book Free Demo</a></div></section>
+
+<section class="ps-apps" id="apps"><div class="ps-w ps-ag">
+  <div class="ps-ac"><h3>Level Up Your Skills with <b>Gyan Automation</b> App</h3><p>Structured learning, expert guidance aur practical knowledge &mdash; seedha app me.</p>
+    <a class="ps-st-btn" id="psPlay"><i class="fab fa-google-play"></i> Google Play</a><a class="ps-st-btn" id="psApple"><i class="fab fa-apple"></i> App Store</a><i class="fas fa-mobile-screen"></i></div>
+  <div class="ps-ac"><h3>Looking for the best <b>learning resources?</b></h3><p>Electrical aur automation ke concepts ke liye E-Books aur study material explore karo.</p>
+    <a class="ps-st-btn" id="psBooks"><i class="fab fa-amazon"></i> Get Books</a><i class="fas fa-book-open"></i></div>
+</div></section>
+
+<footer class="ps-foot"><div class="ps-w"><div class="ps-fg">
+  <div><div class="ps-logo" style="color:#fff;font-size:24px"><span class="ps-mark"><i class="fas fa-bolt"></i></span><span>GYAN <b style="color:#38bdf8">AUTOMATION</b></span></div><p style="margin-top:14px">Learn &bull; Build &bull; Automate.<br>Practical industrial automation training.</p></div>
+  <div><h6>Quick Links</h6><a onclick="psGo('top')">Home</a><a onclick="psGo('courses')">Courses</a><a onclick="psGo('lab')">Lab Setup</a><a onclick="psGo('about')">About Us</a></div>
+  <div><h6>More</h6><a onclick="psVerify()">Verify Certificate</a><a onclick="psCalc()">Calculator</a><a onclick="psSoon('Blogs')">Blogs</a><a onclick="psLogin()">Student Login</a></div>
+  <div><h6>Contact</h6><p id="psContact"></p></div>
+</div><div class="ps-copy">&copy; <span id="psYear"></span> Gyan Automation. All rights reserved.</div></div></footer>
+
+<a class="ps-wa" id="psWa" target="_blank" rel="noopener" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+
+<div id="psModal" onclick="if(event.target===this)psClose()"><div class="ps-md"><button class="ps-x" onclick="psClose()"><i class="fas fa-xmark"></i></button><div id="psMb"></div></div></div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -809,8 +1168,8 @@ const PHONE_DOMAIN = '@phone.gyanautomation.app';
 let state = { user: null, isAdmin: false, profile: null, batches: [], myPurchases: [], currentBatch: null, currentTab: 'overview', currentFolderTitle: '', paymentMethod: 'upi', processing: false, adminCurrentBatchId: null };
 const $ = id => document.getElementById(id);
 let SLIDER_IMAGES = [
-    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgqlqupKpBStr-OjLdXyvxu2YpLUtmPGY6mYUQh8icare5CLaK9t70ZV_OIpyEfLfn4HevCZGHe3EFxnTZIOjA8HQ3kNoxwzARrtaYjF_PqqOLBvqKzPHvV08EwJDwrrNaYsC3o8HwXcGvjGCJ2b3EcKLnXkZBiulQ5zsNUH1AJGkcTqr-l1RLkqQKFDAJx/s853/im%201%20.gif",
-    "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgwFfIrlUQv4QJH0iqy8rJyHRZZhpTYXbDhTycz8DWUHgiLStkFJIWRZuvkqadKCLp-5wYpbQ897LJQBpNnCqa-dxwpyMH8NpPmc32OQJaIrdEesvLTTcNvp2_WqI42YyRANPZfHIkXWerLMF78CHADDTfAC59SwAK3oR2e1Gi6R_qZBQRKivhuVjlBd-Y9/s853/Presentation2.gif"
+    "",
+    ""
 ];
 
 /* ================= UTILS ================= */
@@ -940,6 +1299,7 @@ function logout() { stopAdminChat(); if(window._unsubChat) { window._unsubChat()
 
 let _authNullTimer = null, _loadedUid = null, _firstAuth = true;
 function showLoginScreen() {
+    document.body.classList.add('show-site');
     state.user = null; state.isAdmin = false; _loadedUid = null;
     $('auth-screen').classList.remove('hide');
     $('app-screen').classList.remove('active');
@@ -1205,20 +1565,27 @@ function playVideoFromDetails(itemId) {
     $('modal-body').style.padding = '0'; $('modal-body').style.overflow = 'hidden'; $('modal-body').style.height = '100%';
 
     if(item.type === 'live') {
+        const lu = item.url || '';
+        const yt = lu.match(/(?:youtube\.com\/(?:live\/|watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+        if(yt) { openModal(item.title, `<iframe src="https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0" style="width:100%;height:100%;border:0;" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe>`); return; }
+        if(/^https:\/\/[\w.-]+\.daily\.co\//.test(lu)) { openModal(item.title, `<iframe src="${esc(lu)}" style="width:100%;height:100%;border:0;" allow="camera;microphone;fullscreen;display-capture;autoplay"></iframe>`); return; }
         const room = item.url ? item.url.split('/').pop() : 'ga-live';
         openModal(item.title, `<iframe src="https://meet.jit.si/${room}" style="width:100%;height:100%;border:0;" allow="camera;microphone"></iframe>`); return;
     }
-    let html = '';
+    let html = '', embed = false;
     if(item.url && (item.url.includes('youtube.com') || item.url.includes('youtu.be'))) {
         const vid = item.url.split('v=')[1] || item.url.split('/').pop();
         html = `<div id="player" data-plyr-provider="youtube" data-plyr-embed-id="${vid}" style="width:100%; height:100%;"></div>`;
+    } else if(/^https:\/\/(iframe\.mediadelivery\.net|player\.vimeo\.com|[\w.-]*cloudflarestream\.com|iframe\.videodelivery\.net)\//.test(item.url || '')) {
+        embed = true;
+        html = `<iframe src="${esc(item.url)}" style="width:100%;height:100%;border:0;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen" allowfullscreen></iframe>`;
     } else if(item.type === 'pdf') {
         html = `<iframe src="${item.url}" style="width:100%;height:100%;border:0;"></iframe>`;
     } else {
         html = `<video id="player" playsinline controls style="width:100%; height:100%;"><source src="${item.url}" type="video/mp4" /></video>`;
     }
     openModal(item.title, html);
-    if(item.type !== 'pdf') setTimeout(() => { if(window.Plyr) window.player = new Plyr('#player'); }, 100);
+    if(item.type !== 'pdf' && !embed) setTimeout(() => { if(window.Plyr) window.player = new Plyr('#player'); }, 100);
 }
 
 /* ================= PAYMENT GATEWAY ================= */
@@ -1756,7 +2123,9 @@ async function renderAdminContentTab() {
     cfgDraft.logo = data.logoUrl || '';
     const saved = Array.isArray(data.sliderSlots) ? data.sliderSlots : (data.sliderImages || []);
     cfgDraft.slides = Array.from({ length: SLOT_COUNT }, (_, i) => saved[i] || '');
+    try { const [s1, s2] = await Promise.all([db.collection('config').doc('site').get(), db.collection('config').doc('siteCerts').get()]); loadSiteDraft(s1.exists ? s1.data() : {}, s2.exists ? s2.data() : {}); } catch(e) { loadSiteDraft({}, {}); }
     drawSettings();
+    loadCertList();
 }
 
 function isDataUrl(v) { return String(v || '').startsWith('data:'); }
@@ -1799,7 +2168,9 @@ function drawSettings() {
             ${slots}
 
             <button class="admin-btn" style="margin-top:8px;" onclick="saveSettings()"><i class="fas fa-save"></i> Save All Changes</button>
-        </div>`;
+        </div>
+        ${siteSettingsHtml()}
+        ${certAdminHtml()}`;
 }
 
 function setLogo(v) { cfgDraft.logo = v.trim(); }
@@ -1846,6 +2217,240 @@ async function saveSettings() {
         toast('App settings saved!');
     } catch(e) { toast(e.message); }
 }
+
+/* ============ WEBSITE IMAGES (Lab / Projects / Certificates / Website Logo) ============ */
+let siteDraft = { logo: '', lab: ['', '', '', '', ''], projects: ['', '', '', ''], certs: ['', '', '', ''] };
+
+function loadSiteDraft(a, b) {
+    a = a || {}; b = b || {};
+    const fit = (arr, n) => Array.from({ length: n }, (_, i) => (Array.isArray(arr) && arr[i]) || '');
+    siteDraft = { logo: a.siteLogo || '', lab: fit(a.lab, 5), projects: fit(a.projects, 4), certs: fit(b.certs, 4) };
+}
+function siteGet(kind, i) { return kind === 'logo' ? siteDraft.logo : siteDraft[kind][i]; }
+function siteSet(kind, i, v) { if(kind === 'logo') siteDraft.logo = v; else siteDraft[kind][i] = v; }
+
+function siteSlotHtml(kind, i, label) {
+    const v = siteGet(kind, i), du = isDataUrl(v);
+    return `<div class="slot">
+        <div class="slot-prev" id="sitePrev_${kind}_${i}" style="${v ? `background-image:url('${esc(v)}')` : ''}">${v ? '' : 'No image'}</div>
+        <div class="slot-body">
+            <div class="slot-title">${esc(label)}</div>
+            <input type="text" class="f-input" placeholder="${du ? 'Uploaded from device' : 'Paste image URL'}" value="${du ? '' : esc(v)}" oninput="setSiteImg('${kind}',${i},this.value)">
+            <div class="slot-actions">
+                <label class="mini-btn"><i class="fas fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="pickSiteImg(this,'${kind}',${i})"></label>
+                <button class="mini-btn red" onclick="setSiteImg('${kind}',${i},'');drawSettings()"><i class="fas fa-trash"></i> Reset</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function siteSettingsHtml() {
+    const labN = (typeof SITE !== 'undefined' && SITE.lab) ? SITE.lab.map(t => t[0]) : ['RLC Lab', 'Delta PLC Lab', 'Siemens PLC Lab', 'VFD Lab', 'SCADA & HMI Lab'];
+    const prjN = (typeof SITE !== 'undefined' && SITE.projects) ? SITE.projects.map(t => t[0]) : ['Automatic Shutter', 'Water Filling Tank', 'Lift Project', 'Conveyor Belt'];
+    const logo = siteDraft.logo, du = isDataUrl(logo);
+    return `
+        <div class="admin-card">
+            <h3><i class="fas fa-globe" style="color:#0ea5e9;"></i> Website Images (PC site)</h3>
+            <p class="set-hint">Upload ya direct image URL — save karte hi website par badal jayegi. Reset dabane par purana default (icon/design) wapas aa jata hai.</p>
+
+            <span class="set-label">Website Logo (header + footer)</span>
+            <div class="logo-row">
+                <div class="logo-prev" id="sitePrevLogo">${logo ? `<img src="${esc(logo)}" alt="">` : '<i class="fas fa-bolt"></i>'}</div>
+                <div style="flex:1;min-width:220px;">
+                    <input type="text" class="f-input" placeholder="${du ? 'Uploaded from device' : 'Paste logo URL (khali = app logo)'}" value="${du ? '' : esc(logo)}" oninput="setSiteImg('logo',0,this.value)" style="margin-bottom:8px;">
+                    <div class="slot-actions">
+                        <label class="mini-btn"><i class="fas fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="pickSiteImg(this,'logo',0)"></label>
+                        <button class="mini-btn red" onclick="setSiteImg('logo',0,'');drawSettings()"><i class="fas fa-trash"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <span class="set-label">Lab Set-up Images</span>
+            ${labN.map((n, i) => siteSlotHtml('lab', i, n)).join('')}
+
+            <span class="set-label" style="margin-top:18px;">Live Industrial Projects Images</span>
+            ${prjN.map((n, i) => siteSlotHtml('projects', i, n)).join('')}
+
+            <span class="set-label" style="margin-top:18px;">Certificate Images (Certified Programs section)</span>
+            ${[0, 1, 2, 3].map(i => siteSlotHtml('certs', i, 'Certificate ' + (i + 1))).join('')}
+
+            <button class="admin-btn" style="margin-top:8px;" onclick="saveSiteImages()"><i class="fas fa-save"></i> Save Website Images</button>
+        </div>`;
+}
+
+function setSiteImg(kind, i, v) {
+    v = String(v || '').trim();
+    siteSet(kind, i, v);
+    if(kind === 'logo') { const p = $('sitePrevLogo'); if(p) p.innerHTML = v ? `<img src="${esc(v)}" alt="">` : '<i class="fas fa-bolt"></i>'; return; }
+    const p = $('sitePrev_' + kind + '_' + i); if(!p) return;
+    if(v) { p.style.backgroundImage = `url('${v.replace(/'/g, '%27')}')`; p.textContent = ''; }
+    else { p.style.backgroundImage = ''; p.textContent = 'No image'; }
+}
+
+async function pickSiteImg(input, kind, i) {
+    const f = input.files && input.files[0]; if(!f) return;
+    try {
+        const out = kind === 'logo' ? await compressImage(f, 256, 'image/png')
+                  : kind === 'certs' ? await compressImage(f, 800, 'image/jpeg', 0.7)
+                  : await compressImage(f, 640, 'image/jpeg', 0.65);
+        siteSet(kind, i, out);
+        drawSettings();
+        toast('Image ready — Save Website Images dabao');
+    } catch(e) { toast(e.message); }
+}
+
+async function saveSiteImages() {
+    const a = { siteLogo: siteDraft.logo, lab: siteDraft.lab, projects: siteDraft.projects };
+    const b = { certs: siteDraft.certs };
+    if(JSON.stringify(a).length > 950000 || JSON.stringify(b).length > 950000) return toast('Images bahut badi hain — kuch images ke liye URL use karo');
+    try {
+        await Promise.all([
+            db.collection('config').doc('site').set(a, { merge: true }),
+            db.collection('config').doc('siteCerts').set(b, { merge: true })
+        ]);
+        toast('Website images saved!');
+    } catch(e) {
+        toast(e.code === 'permission-denied' ? 'Permission denied — Firestore rules me config/site aur config/siteCerts allow karo' : e.message);
+    }
+}
+window.setSiteImg = setSiteImg; window.pickSiteImg = pickSiteImg; window.saveSiteImages = saveSiteImages;
+
+/* ============ CERTIFICATES (website par Verify ke liye) ============ */
+let certForm = { id: '', name: '', course: '', from: '', to: '', grade: '', img: '', exists: false };
+let certRows = [];
+const certId = v => String(v || '').trim().toUpperCase().replace(/[\s\/]/g, '');   // website verify jaisa hi
+
+function certListHtml() {
+    if(!certRows.length) return '<div class="set-hint" style="margin:0;">Abhi koi certificate add nahi hua.</div>';
+    return certRows.map(r => `<div class="slot" style="padding:10px 12px;">
+        <div class="slot-body"><div class="slot-title" style="margin:0;">${esc(r.id)} ${r.hasImg ? '<i class="fas fa-image" style="color:#0ea5e9;" title="Image hai"></i>' : ''}</div>
+        <div style="font-size:12px;color:#64748b;">${esc(r.name)} — ${esc(r.course)}</div></div>
+        <div class="slot-actions">
+            <button class="mini-btn" data-id="${esc(r.id)}" onclick="certLoad(this.dataset.id)"><i class="fas fa-pen"></i> Edit</button>
+            <button class="mini-btn red" data-id="${esc(r.id)}" onclick="certDelete(this.dataset.id)"><i class="fas fa-trash"></i></button>
+        </div></div>`).join('');
+}
+
+function certAdminHtml() {
+    const f = certForm;
+    const inp = (k, ph) => `<input type="text" class="f-input" placeholder="${ph}" value="${esc(f[k])}" oninput="certSet('${k}',this.value)">`;
+    return `
+        <div class="admin-card">
+            <h3><i class="fas fa-certificate" style="color:#f59e0b;"></i> Certificates (Website Verify)</h3>
+            <p class="set-hint">Yahan jo certificate add karoge, website par "Verify Certificate" me number daalne par uski details (aur image, agar lagayi ho) dikhengi. Ye hamesha Firebase me save rehta hai.</p>
+
+            <div class="f-row">
+                <input type="text" id="certSearch" class="f-input" placeholder="Purana certificate dhundo (Certificate No.)" onkeydown="if(event.key==='Enter')certFind()">
+                <button class="admin-btn" style="width:auto;padding:0 22px;" onclick="certFind()"><i class="fas fa-search"></i></button>
+            </div>
+
+            <span class="set-label">${f.exists ? 'Certificate edit ho raha hai' : 'Naya Certificate'}</span>
+            ${inp('id', 'Certificate No. (e.g. GA2026001)')}
+            ${inp('name', 'Student Name')}
+            ${inp('course', 'Course (e.g. PLC, SCADA & VFD)')}
+            <div class="f-row">
+                <input type="text" class="f-input" placeholder="From (01-03-2026)" value="${esc(f.from)}" oninput="certSet('from',this.value)">
+                <input type="text" class="f-input" placeholder="To (10-04-2026)" value="${esc(f.to)}" oninput="certSet('to',this.value)">
+            </div>
+            ${inp('grade', 'Grade (optional, e.g. A+)')}
+
+            <div class="slot">
+                <div class="slot-prev" id="certPrev" style="width:132px;height:94px;${f.img ? `background-image:url('${esc(f.img)}')` : ''}">${f.img ? '' : 'No image'}</div>
+                <div class="slot-body">
+                    <div class="slot-title">Certificate Image (optional)</div>
+                    <div class="slot-actions">
+                        <label class="mini-btn"><i class="fas fa-upload"></i> Upload<input type="file" accept="image/*" style="display:none" onchange="certPick(this)"></label>
+                        <button class="mini-btn red" onclick="certSet('img','');drawSettings()"><i class="fas fa-trash"></i> Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="f-row">
+                <button class="admin-btn" onclick="certSave()"><i class="fas fa-save"></i> Save Certificate</button>
+                <button class="admin-btn" style="background:#e2e8f0;color:#475569;" onclick="certReset()"><i class="fas fa-plus"></i> New</button>
+            </div>
+
+            <span class="set-label" style="margin-top:20px;">Latest Certificates</span>
+            <div id="certListBox">${certListHtml()}</div>
+        </div>`;
+}
+
+function certSet(k, v) { certForm[k] = (k === 'img') ? v : String(v || ''); }
+function certReset() { certForm = { id: '', name: '', course: '', from: '', to: '', grade: '', img: '', exists: false }; drawSettings(); }
+
+function certCompress(file, maxW) {
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file), img = new Image();
+        img.onload = () => {
+            const sc = Math.min(1, maxW / img.width), c = document.createElement('canvas');
+            c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+            const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+            x.drawImage(img, 0, 0, c.width, c.height);
+            URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.75));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Invalid image')); };
+        img.src = url;
+    });
+}
+async function certPick(input) {
+    const f = input.files && input.files[0]; if(!f) return;
+    try { certForm.img = await certCompress(f, 1000); drawSettings(); toast('Image ready — Save Certificate dabao'); }
+    catch(e) { toast(e.message); }
+}
+
+async function loadCertList() {
+    try {
+        const snap = await db.collection('certificates').orderBy('createdAt', 'desc').limit(30).get();
+        certRows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch(e) { console.warn('cert list', e); certRows = []; }
+    const b = $('certListBox'); if(b) b.innerHTML = certListHtml();
+}
+
+async function certLoad(id) {
+    id = certId(id); if(!id) return toast('Certificate No. daalo');
+    try {
+        const s = await db.collection('certificates').doc(id).get();
+        if(!s.exists) return toast('Is number ka certificate nahi mila');
+        const d = s.data(); let img = '';
+        if(d.hasImg) { try { const si = await db.collection('certImages').doc(id).get(); if(si.exists) img = si.data().img || ''; } catch(e) {} }
+        certForm = { id, name: d.name || '', course: d.course || '', from: d.from || '', to: d.to || '', grade: d.grade || '', img, exists: true };
+        drawSettings();
+        const el = $('certSearch'); if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch(e) { toast(e.message); }
+}
+function certFind() { const el = $('certSearch'); certLoad(el ? el.value : ''); }
+
+async function certSave() {
+    const f = certForm, id = certId(f.id);
+    if(!id) return toast('Certificate No. daalo');
+    if(!f.name.trim() || !f.course.trim()) return toast('Student Name aur Course zaroori hain');
+    if(f.img && f.img.length > 900000) return toast('Image bahut badi hai — chhoti image use karo');
+    const data = { name: f.name.trim(), course: f.course.trim(), from: f.from.trim(), to: f.to.trim(), grade: f.grade.trim(), hasImg: !!f.img, updatedAt: Date.now() };
+    if(!f.exists) data.createdAt = Date.now();
+    try {
+        await db.collection('certificates').doc(id).set(data, { merge: true });
+        if(f.img) await db.collection('certImages').doc(id).set({ img: f.img });
+        else { try { await db.collection('certImages').doc(id).delete(); } catch(e) {} }
+        toast('Certificate saved!');
+        certForm = { id: '', name: '', course: '', from: '', to: '', grade: '', img: '', exists: false };
+        await loadCertList(); drawSettings();
+    } catch(e) {
+        toast(e.code === 'permission-denied' ? 'Permission denied — Firestore rules me certificates aur certImages allow karo' : e.message);
+    }
+}
+
+async function certDelete(id) {
+    if(!confirm('Certificate ' + id + ' delete karna hai?')) return;
+    try {
+        await db.collection('certificates').doc(id).delete();
+        try { await db.collection('certImages').doc(id).delete(); } catch(e) {}
+        certRows = certRows.filter(r => r.id !== id);
+        if(certId(certForm.id) === id) certForm = { id: '', name: '', course: '', from: '', to: '', grade: '', img: '', exists: false };
+        drawSettings(); toast('Deleted');
+    } catch(e) { toast(e.message); }
+}
+window.certSet = certSet; window.certReset = certReset; window.certPick = certPick; window.certLoad = certLoad;
+window.certFind = certFind; window.certSave = certSave; window.certDelete = certDelete;
 
 function renderAdminStore() {
     const box = $('admin-store');
@@ -1923,5 +2528,207 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 window.addEventListener('load', () => { fitNet(); fitHero(); });
 </script>
+
+<script>
+/* ================= PC WEBSITE LOGIC (phone par kuch nahi chalta) ================= */
+/* >>> Apni details yahan badlo <<< */
+const SITE = {
+  whatsapp: '918009126104',            // country code ke saath number, bina + ke
+  phone: '+91 8009126104', email: 'info@gyanautomation.com', address: 'Lukhnow, Uttar Pradesh, India',
+  offlineLoginUrl: '',                 // Offline Student Login ka link (poora https://... link)
+  onlineLoginUrl: '',                  // khali = isi app ka login khulega; link do to wahan redirect hoga
+  playStore: '#', appStore: '#', books: '#',
+  avatarCount: '+99',
+  about: 'Practical training, strong industry connections aur real-world learning &mdash; ye numbers hamari commitment dikhate hain.',
+  stats: [['4000+','Students Trained'],['20+','Partner Companies'],['20+','Live Projects'],['14K+','YouTube Subscribers']],  // <- real numbers daalo
+  lab: [['RLC Lab','fa-plug',''],['Delta PLC Lab','fa-microchip',''],['Siemens PLC Lab','fa-server',''],['VFD Lab','fa-bolt',''],['SCADA & HMI Lab','fa-desktop','']],   // 3rd value = photo URL (optional)
+  projects: [['Automatic Shutter','fa-door-closed',''],['Water Filling Tank','fa-faucet-drip',''],['Lift Project','fa-elevator',''],['Conveyor Belt','fa-boxes-packing','']]
+};
+/* Certificates: yahan ya Firestore 'certificates' collection (doc id = certificate no.) me add karo */
+const CERTS = {
+  'GA-DEMO-001': { name:'Demo Student', course:'PLC, SCADA & VFD', from:'01-03-2026', to:'10-04-2026', grade:'A+' }   // test ke baad delete kar do
+};
+(function(){
+  const g = id => document.getElementById(id);
+  const mq = window.matchMedia('(min-width:900px)');
+  g('psYear').textContent = new Date().getFullYear();
+  g('psAvCount').textContent = SITE.avatarCount;
+  g('psAbout').innerHTML = SITE.about;
+  g('psWa').href = 'https://wa.me/' + SITE.whatsapp;
+  g('psDemo').href = 'https://wa.me/' + SITE.whatsapp + '?text=' + encodeURIComponent('Hello, mujhe free demo class book karni hai.');
+  g('psPlay').href = SITE.playStore; g('psApple').href = SITE.appStore; g('psBooks').href = SITE.books;
+  [g('psPlay'),g('psApple'),g('psBooks')].forEach(a => a.target = '_blank');
+  g('psContact').innerHTML = '<i class="fas fa-phone"></i> ' + SITE.phone + '<br><i class="fas fa-envelope"></i> ' + SITE.email + '<br><i class="fas fa-location-dot"></i> ' + SITE.address;
+
+  const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const safeUrl = u => { u = String(u || ''); return (/^https?:\/\/[^\s'"\\]+$/i.test(u) || /^data:image\/[a-z+.-]+;base64,[A-Za-z0-9+\/=]+$/i.test(u)) ? u : ''; };
+
+  /* compare */
+  const mine = [['Practical-first Training','Har topic ke saath hands-on lab practice.'],['Automation Focus','PLC, SCADA, HMI, VFD aur Panel Wiring par concentrate.'],['Dedicated Labs','Alag-alag PLC brands ke liye practical lab setup.'],['Recorded Classes & App','Revision ke liye recorded classes aur learning app.'],['Interview & Job Preparation','Technical + HR interview aur CV guidance.'],['Demo Before Admission','Admission se pehle training experience karo.']];
+  const oth = ['Sirf theory ya limited practical sessions.','Course ka focus broad hota hai, automation par nahi.','Limited lab access, batches ya slots me practice.','Kam hours ka training schedule.','Recorded lectures ya platform nahi milta.','Interview preparation course ke end me ya nahi.'];
+  g('psCmp').innerHTML =
+    '<div class="ps-cc"><header>Gyan Automation<small>Training Institute</small></header><ul>' + mine.map(m => '<li><i class="fas fa-circle-check"></i><div><b>' + m[0] + '</b><span>' + m[1] + '</span></div></li>').join('') + '</ul></div>' +
+    '<div class="ps-cc o"><header>Typical Courses<small>Other Institutes</small></header><ul>' + oth.map(o => '<li><i class="fas fa-circle-xmark"></i><div>' + o + '</div></li>').join('') + '</ul></div>';
+
+  g('psStats').innerHTML = SITE.stats.map(s => '<div class="ps-st"><b>' + E(s[0]) + '</b><span>' + E(s[1]) + '</span></div>').join('');
+
+  const courses = [['PLC Programming','fa-microchip','Ladder logic, timers, counters aur real PLC programming.'],['SCADA & HMI','fa-desktop','Screen design, tags, alarms aur plant monitoring.'],['VFD & Drives','fa-bolt','Drive wiring, parameters aur motor control.'],['Electrical Panel Wiring','fa-plug','Control panel wiring, relay & contactor logic.'],['Electrical AutoCAD','fa-compass-drafting','Electrical drawings & panel layouts beginners ke liye.'],['Industrial Projects','fa-industry','Conveyor, lift, shutter jaise live projects.']];
+  const cc = [['#2563eb','#dbeafe'],['#7c3aed','#ede9fe'],['#d97706','#fef3c7'],['#059669','#d1fae5'],['#db2777','#fce7f3'],['#0891b2','#cffafe']];
+  g('psCourses').innerHTML = courses.map((c, i) => '<div class="ps-co" style="--c:' + cc[i][0] + ';--bg:' + cc[i][1] + '" data-k="' + c[0].toLowerCase() + ' ' + c[2].toLowerCase() + '"><span class="ps-ci"><i class="fas ' + c[1] + '"></i></span><h4>' + c[0] + '</h4><p>' + c[2] + '</p><a onclick="psLogin()">Enroll / Login <i class="fas fa-arrow-right"></i></a></div>').join('');
+  g('psSearch').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
+    document.querySelectorAll('.ps-co').forEach(c => c.style.display = !q || c.dataset.k.includes(q) ? '' : 'none');
+    if(q) window.psGo('courses');
+  });
+
+  const tiles = (arr, id) => { const el = g(id); el.innerHTML = arr.map(t => '<div class="ps-tile"><i class="fas ' + t[1] + '"></i><em>' + E(t[0]) + '</em></div>').join(''); [...el.children].forEach((c, i) => { const u = safeUrl(arr[i][2]); if(u) { c.style.backgroundImage = 'url("' + u + '")'; c.firstElementChild.style.display = 'none'; } }); };
+  tiles(SITE.lab, 'psLab'); tiles(SITE.projects, 'psProj');
+
+  g('psFeat').innerHTML = [['10+','Years of Training Excellence','Industry standards ke hisaab se practical, job-ready training.'],['100%','Placement Support','Interview opportunities, CV guidance aur dedicated placement team.'],['ISO','Approved Certification','Course ke baad verifiable certificate jo career me value add kare.'],['1','Expert Trainers','Real industrial projects par kaam kiye hue experienced faculty.']]
+    .map(f => '<div class="ps-f"><h4>' + f[0] + '</h4><h5>' + f[1] + '</h5><p>' + f[2] + '</p></div>').join('');
+
+  g('psCg').innerHTML = ['GA2026001','GA2026002','GA2026003','GA2026004'].map(n => '<div class="ps-cd"><i class="fas fa-award"></i><b>Gyan Automation Training Institute</b><em>CERTIFICATE OF COMPLETION</em><span>Certificate No. ' + n + '<br>PLC &bull; SCADA &bull; VFD &bull; HMI</span></div>').join('');
+
+  /* ---- admin se badli hui images (Firestore: config/site + config/siteCerts) ---- */
+  const certOrig = [...g('psCg').children].map(c => c.innerHTML);
+  const appLogo = () => { const li = g('loginLogoImg'); return li && li.style.display !== 'none' ? safeUrl(li.getAttribute('src')) : ''; };
+  const applyTile = (el, u, dflt) => {
+    if(!el) return; u = safeUrl(u) || safeUrl(dflt);
+    if(u) { el.style.backgroundImage = 'url("' + u + '")'; el.firstElementChild.style.display = 'none'; }
+    else { el.style.backgroundImage = ''; el.firstElementChild.style.display = ''; }
+  };
+  const setMark = (mark, u) => {
+    if(!mark) return;
+    let im = mark.querySelector('img'); const ic = mark.querySelector('i');
+    if(!im && u) { im = document.createElement('img'); mark.insertBefore(im, mark.firstChild); }
+    if(u) { im.src = u; im.style.display = 'block'; if(ic) ic.style.display = 'none'; }
+    else { if(im) im.style.display = 'none'; if(ic) ic.style.display = ''; }
+  };
+  window.psApplySite = function(d) {
+    d = d || {};
+    if('lab' in d) [...g('psLab').children].forEach((el, i) => applyTile(el, (d.lab || [])[i], SITE.lab[i] && SITE.lab[i][2]));
+    if('projects' in d) [...g('psProj').children].forEach((el, i) => applyTile(el, (d.projects || [])[i], SITE.projects[i] && SITE.projects[i][2]));
+    if('certs' in d) [...g('psCg').children].forEach((c, i) => {
+      const u = safeUrl((d.certs || [])[i]);
+      if(u) { c.classList.add('has-img'); c.innerHTML = ''; const im = document.createElement('img'); im.alt = 'Certificate'; im.src = u; c.appendChild(im); }
+      else { c.classList.remove('has-img'); c.innerHTML = certOrig[i] || ''; }
+    });
+    if('siteLogo' in d) {
+      const u = safeUrl(d.siteLogo); window._psSiteLogo = !!u;
+      setMark(document.querySelector('#pc-site .ps-head .ps-mark'), u || appLogo());
+      setMark(document.querySelector('#pc-site .ps-foot .ps-mark'), u);
+    }
+  };
+  try {
+    db.collection('config').doc('site').onSnapshot(s => window.psApplySite(s.exists ? s.data() : {}), e => console.warn('site config', e));
+    db.collection('config').doc('siteCerts').onSnapshot(s => window.psApplySite(s.exists ? s.data() : {}), e => console.warn('site certs', e));
+  } catch(e) { console.warn(e); }
+
+
+
+
+  /* banner carousel (app ke slider images use karta hai, na ho to default cards) */
+  let idx = 0, timer = null;
+  function banners() {
+    const imgs = (typeof SLIDER_IMAGES !== 'undefined' ? SLIDER_IMAGES : []).filter(u => safeUrl(u));
+    const grads = ['linear-gradient(135deg,#1e3a8a,#0ea5e9)','linear-gradient(135deg,#0b1b3a,#7c3aed)','linear-gradient(135deg,#065f46,#10b981)','linear-gradient(135deg,#9a3412,#f59e0b)','linear-gradient(135deg,#312e81,#2563eb)'];
+    const txt = [['PLC Training','Live batches available'],['SCADA & HMI','Practical screens & alarms'],['VFD Drives','Wiring + programming'],['Panel Wiring','From zero to advanced'],['Interview Prep','Questions & answers']];
+    const items = imgs.length ? imgs.map(u => ({img: u})) : txt.map((t, i) => ({t: t[0], s: t[1], gr: grads[i]}));
+    const pv = Math.min(3, items.length), tr = g('psTrack');
+    tr.innerHTML = ''; tr.style.setProperty('--pv', pv);
+    const loop = items.length > pv ? items.concat(items.slice(0, pv)) : items;
+    loop.forEach(it => { const d = document.createElement('div'); d.className = 'ps-bn';
+      if(it.img) d.style.backgroundImage = 'url("' + it.img + '")'; else { d.style.background = it.gr; d.innerHTML = E(it.t) + '<small>' + E(it.s) + '</small>'; }
+      tr.appendChild(d); });
+    const pages = items.length, loopOn = items.length > pv;
+    g('psDots').innerHTML = Array.from({length: pages}, (_, i) => '<i data-i="' + i + '"></i>').join('');
+    g('psDots').querySelectorAll('i').forEach(d => d.onclick = () => { idx = +d.dataset.i; move(pages, pv); });
+    idx = 0; move(pages, pv);
+    clearInterval(timer);
+    if(loopOn) timer = setInterval(() => {
+      if(!mq.matches) return;
+      idx++; move(pages, pv);
+      if(idx >= pages) setTimeout(() => { idx = 0; move(pages, pv, true); }, 750);
+    }, 3200);
+  }
+  function move(pages, pv, instant) {
+    const t = g('psTrack'), first = t.firstElementChild; if(!first) return;
+    t.style.transition = instant ? 'none' : '';
+    t.style.transform = 'translateX(-' + (idx * (first.offsetWidth + 20)) + 'px)';
+    if(instant) void t.offsetWidth;
+    g('psDots').querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i === (idx % pages)));
+  }
+  banners();
+  window.addEventListener('resize', () => { idx = 0; banners(); });
+  /* app config (logo/slider) badalne par site bhi update ho */
+  if(typeof initSlider === 'function') { const _o = initSlider; initSlider = function(){ _o.apply(this, arguments); banners(); }; }
+  const li = g('loginLogoImg');
+  if(li) new MutationObserver(() => { const s = li.getAttribute('src'); if(s && li.style.display !== 'none' && !window._psSiteLogo) { g('psLogoImg').src = s; g('psLogoImg').style.display = 'block'; g('psLogoIcon').style.display = 'none'; } }).observe(li, {attributes: true, attributeFilter: ['src', 'style']});
+
+  /* navigation */
+  window.psGo = id => { if(id === 'top') { g('pc-site').scrollTo({top: 0, behavior: 'smooth'}); return; } const el = g(id); if(el) el.scrollIntoView({behavior: 'smooth', block: 'start'}); };
+  window.psLogin = () => { document.body.classList.remove('show-site'); };
+  window.psBack = () => { document.body.classList.add('show-site'); };
+  const go = (u, nt) => { u = safeUrl(u); if(!u) return false; if(nt) window.open(u, '_blank', 'noopener'); else location.href = u; return true; };
+  window.psUm = () => {
+    const logged = typeof state !== 'undefined' && state && state.user;
+    g('psUm').innerHTML = logged
+      ? '<a onclick="psLogin()"><span class="ps-ui b"><i class="fas fa-gauge"></i></span>Go to Dashboard</a><a onclick="psLogout()"><span class="ps-ui"><i class="fas fa-right-from-bracket"></i></span>Logout</a>'
+      : '<a onclick="psOnline()"><span class="ps-ui"><i class="fas fa-laptop-code"></i></span>Online Student Login</a><a onclick="psOffline()"><span class="ps-ui b"><i class="fas fa-chalkboard-user"></i></span>Offline Student Login</a>';
+  };
+  window.psOnline = () => { if(!go(SITE.onlineLoginUrl, false)) window.psLogin(); };
+  window.psOffline = () => { if(!go(SITE.offlineLoginUrl, true)) open('<h3>Offline Student Login</h3><p>Is button ka link abhi set nahi hai. Code me <b>SITE.offlineLoginUrl</b> me link daalein.</p><button class="ps-vbtn" onclick="psClose()">OK</button>'); };
+  window.psLogout = () => { if(typeof logout === 'function') logout(); };
+  window.psUm();
+  /* scroll reveal */
+  try {
+    const sel = '.ps-h,.ps-sub,.ps-cc,.ps-rec,.ps-st,.ps-co,.ps-tag,.ps-tile,.ps-f,.ps-cert>div,.ps-cd,.ps-cta2 .ps-w>*,.ps-ac';
+    const els = [...document.querySelectorAll('#pc-site ' + sel)];
+    if('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting) { const el = e.target; el.classList.remove('ps-pre'); el.classList.add('ps-show'); io.unobserve(el); } }), {root: g('pc-site'), threshold: 0.12});
+      els.forEach((el, i) => { el.style.animationDelay = ((i % 6) * 90) + 'ms'; el.classList.add('ps-pre'); io.observe(el); });
+    }
+  } catch(e) {}
+  window.psClose = () => g('psModal').classList.remove('on');
+  const open = html => { g('psMb').innerHTML = html; g('psModal').classList.add('on'); };
+  window.psSoon = t => open('<h3>' + t + '</h3><p>Ye section jaldi aa raha hai. Tab tak courses explore karein.</p><button class="ps-vbtn" onclick="psClose()">OK</button>');
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') window.psClose(); });
+
+  /* verify certificate */
+  window.psVerify = () => {
+    open('<h3><i class="fas fa-certificate" style="color:#f59e0b"></i> Verify Certificate</h3><p>Certificate par likha Certificate No. yahan daalo.</p><input class="ps-in" id="psCid" placeholder="e.g. GA2026001" autocomplete="off"><button class="ps-vbtn" id="psVbtn" style="width:100%;justify-content:center" onclick="psCheck()">Verify</button><div id="psVres"></div>');
+    setTimeout(() => { const i = g('psCid'); if(i){ i.focus(); i.addEventListener('keydown', e => { if(e.key === 'Enter') window.psCheck(); }); } }, 50);
+  };
+  window.psCheck = async () => {
+    const id = g('psCid').value.trim().toUpperCase().replace(/[\s\/]/g, ''), out = g('psVres');
+    if(!id) { out.innerHTML = '<div class="ps-res no">Pehle certificate number daalo.</div>'; return; }
+    const btn = g('psVbtn'); btn.disabled = true; btn.textContent = 'Checking...';
+    let d = CERTS[id] || null, err = false;
+    if(!d) { try { const s = await db.collection('certificates').doc(id).get(); if(s.exists) d = s.data(); } catch(e) { err = true; } }
+    btn.disabled = false; btn.textContent = 'Verify';
+    if(d) out.innerHTML = '<div class="ps-res ok"><b><i class="fas fa-circle-check"></i> Valid Certificate</b><br>Certificate No: <b>' + E(id) + '</b><br>Name: <b>' + E(d.name) + '</b><br>Course: <b>' + E(d.course) + '</b><br>Duration: <b>' + E(d.from) + ' to ' + E(d.to) + '</b>' + (d.grade ? '<br>Grade: <b>' + E(d.grade) + '</b>' : '') + '</div>';
+    else out.innerHTML = '<div class="ps-res no"><b><i class="fas fa-circle-xmark"></i> ' + (err ? 'Verification abhi available nahi hai' : 'Certificate nahi mila') + '</b><br>' + (err ? 'Thodi der baad try karein ya institute se sampark karein.' : 'Number dobara check karein ya institute se sampark karein.') + '</div>';
+    if(d && d.hasImg) {
+      try {
+        const si = await db.collection('certImages').doc(id).get(), u = si.exists ? safeUrl(si.data().img) : '';
+        if(u && out.firstElementChild) { const im = document.createElement('img'); im.src = u; im.alt = 'Certificate'; im.style.cssText = 'width:100%;margin-top:14px;border-radius:10px;border:1px solid #cbd5e1;display:block'; out.firstElementChild.appendChild(im); }
+      } catch(e) {}
+    }
+  };
+
+  /* calculator (Ohm's law) */
+  window.psCalc = () => open('<h3><i class="fas fa-calculator" style="color:#2563eb"></i> Ohm\'s Law Calculator</h3><p>Kisi bhi do values daalo, teesri nikal jayegi.</p><input class="ps-in" id="cV" type="number" step="any" placeholder="Voltage V (volts)"><input class="ps-in" id="cI" type="number" step="any" placeholder="Current I (amps)"><input class="ps-in" id="cR" type="number" step="any" placeholder="Resistance R (ohms)"><button class="ps-vbtn" style="width:100%;justify-content:center" onclick="psOhm()">Calculate</button><div id="cOut"></div>');
+  window.psOhm = () => {
+    const f = id => { const v = g(id).value; return v === '' ? null : parseFloat(v); };
+    let V = f('cV'), I = f('cI'), R = f('cR'), out = g('cOut');
+    const n = [V, I, R].filter(x => x !== null).length;
+    if(n !== 2) { out.innerHTML = '<div class="ps-res no">Sirf do values daalo.</div>'; return; }
+    if(V === null) V = I * R; else if(I === null) { if(!R) { out.innerHTML = '<div class="ps-res no">R zero nahi ho sakta.</div>'; return; } I = V / R; } else { if(!I) { out.innerHTML = '<div class="ps-res no">I zero nahi ho sakta.</div>'; return; } R = V / I; }
+    const r = x => Math.round(x * 1e4) / 1e4;
+    out.innerHTML = '<div class="ps-res ok">V = <b>' + r(V) + ' V</b><br>I = <b>' + r(I) + ' A</b><br>R = <b>' + r(R) + ' &Omega;</b><br>Power P = <b>' + r(V * I) + ' W</b></div>';
+  };
+})();
+</script>
+
 </body>
 </html>
