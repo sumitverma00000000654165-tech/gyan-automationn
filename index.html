@@ -2169,69 +2169,84 @@ const RAZORPAY_KEY_ID = 'rzp_test_U1l2jitWg2MNdE';
 
 function resetPayBtn(btn, b) { btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false; state.processing = false; }
 
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* Ek write ko 3 baar tak retry karta hai. permission-denied par turant ruk jata hai. */
+async function tryWrite(fn) {
+    let lastErr = '';
+    for(let i = 0; i < 3; i++) {
+        try { await fn(); return { ok: true }; }
+        catch(e) {
+            lastErr = (e && (e.message || e.code)) || 'error';
+            if(e && e.code === 'permission-denied') break;
+            await wait(800 * (i + 1));
+        }
+    }
+    return { ok: false, err: lastErr };
+}
+
 async function payWithRazorpay(b, btn) {
     if(typeof Razorpay === 'undefined') return toast('Payment script load nahi hua. Internet check karke dobara try karo.');
     if(!state.user) return toast('Pehle login karo');
+    const price = Number(b.price);
+    if(!(price >= 1)) return toast('Invalid price');
 
     state.processing = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; btn.disabled = true;
 
     const email = (state.user.email && state.user.email.indexOf(PHONE_DOMAIN) === -1) ? state.user.email : '';
     const phone = (state.profile && state.profile.phone) || '';
-    const userName = (state.profile && state.profile.name) || '';
+    const userName = (state.profile && state.profile.name) || (state.user.email ? state.user.email.split('@')[0] : '');
     let paid = false;
 
     const options = {
         key: RAZORPAY_KEY_ID,
-        amount: Math.round(Number(b.price) * 100),   // paise me (₹299 => 29900)
+        amount: Math.round(price * 100),   // paise me (₹299 => 29900)
         currency: 'INR',
         name: 'Gyan Automation',
         description: b.title,
         prefill: { name: userName, email: email, contact: phone },
+        notes: { batchId: b.id, uid: state.user.uid },   // Razorpay dashboard me dikhega
         theme: { color: '#2563eb' },
         handler: async function(resp) {
             paid = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Purchase...';
+            const pid = resp.razorpay_payment_id;
             const now = Date.now();
             const expiry = now + ((b.days || 365) * 86400000);
-            let ok = false, err = '';
-            for(let i = 0; i < 3 && !ok; i++) {
-                try {
-                    // 1) orders collection me entry
-                    await db.collection('orders').doc(resp.razorpay_payment_id).set({
-                        paymentId: resp.razorpay_payment_id,
-                        uid: state.user.uid,
-                        userName: userName,
-                        email: email,
-                        phone: phone,
-                        batchId: b.id,
-                        title: b.title,
-                        amount: Number(b.price),
-                        currency: 'INR',
-                        status: 'paid',
-                        method: 'razorpay',
-                        createdAt: now
-                    });
-                    // 2) user ke purchased batches me entry
-                    await db.collection('users').doc(state.user.uid).collection('purchases').doc(b.id).set({
-                        batchId: b.id,
-                        purchasedAt: now,
-                        expiry: expiry,
-                        paymentId: resp.razorpay_payment_id
-                    });
-                    ok = true;
-                } catch(e) {
-                    err = e.message || 'error';
-                    if(e.code === 'permission-denied') break;
-                    await new Promise(r => setTimeout(r, 1000 * (i + 1)));
-                }
+
+            // 1) User ko access (sabse zaroori)
+            const rPurchase = await tryWrite(() => db.collection('users').doc(state.user.uid).collection('purchases').doc(b.id).set({
+                batchId: b.id, purchasedAt: now, expiry: expiry, paymentId: pid, method: 'razorpay'
+            }));
+
+            // 2) Orders record (alag retry, purchase ko rokta nahi)
+            const rOrder = await tryWrite(() => db.collection('orders').doc(pid).set({
+                paymentId: pid, uid: state.user.uid, userName: userName, email: email, phone: phone,
+                batchId: b.id, title: b.title, amount: price, currency: 'INR',
+                status: 'paid', method: 'razorpay', createdAt: now
+            }));
+
+            // 3) Dono fail hue to admin panel ke liye pending request bana do (existing Approve button se unlock hoga)
+            let fallbackOk = false;
+            if(!rPurchase.ok) {
+                const rFb = await tryWrite(() => db.collection('payRequests').add({
+                    uid: state.user.uid, userName: userName, batchId: b.id, title: b.title, amount: price,
+                    utr: pid, status: 'pending', createdAt: now
+                }));
+                fallbackOk = rFb.ok;
             }
-            if(ok) {
-                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check"><i class="fas fa-check"></i></div><h3>Payment Successful!</h3><p>Your batch is now unlocked.</p><div class="pay-receipt">Payment ID: ${esc(resp.razorpay_payment_id)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Done</button></div>`;
+
+            if(rPurchase.ok) {
+                if(!rOrder.ok) console.warn('Order record save nahi hua:', rOrder.err, pid);
+                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check"><i class="fas fa-check"></i></div><h3>Payment Successful!</h3><p>Your batch is now unlocked.</p><div class="pay-receipt">Payment ID: ${esc(pid)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Done</button></div>`;
                 state.processing = false;
                 setTimeout(() => { $('payOverlay').classList.remove('active'); refreshCurrent(); }, 2000);
             } else {
-                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check" style="background:#f59e0b"><i class="fas fa-exclamation"></i></div><h3>Payment Received</h3><p>Purchase save nahi ho paya (${esc(err)}). Paisa safe hai. Is Payment ID ke saath support se contact karo, batch jaldi unlock kar diya jayega.</p><div class="pay-receipt">Payment ID: ${esc(resp.razorpay_payment_id)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Close</button></div>`;
+                const msg = fallbackOk
+                    ? 'Aapka payment request admin ko bhej diya gaya hai. Batch jaldi unlock ho jayega.'
+                    : 'Purchase save nahi ho paya. Is Payment ID ke saath support se contact karo, batch jaldi unlock kar diya jayega.';
+                $('payContent').innerHTML = `<div class="pay-success"><div class="success-check" style="background:#f59e0b"><i class="fas fa-exclamation"></i></div><h3>Payment Received</h3><p>Paisa safe hai. ${msg}</p><div class="pay-receipt">Payment ID: ${esc(pid)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Close</button></div>`;
                 state.processing = false;
             }
         },
