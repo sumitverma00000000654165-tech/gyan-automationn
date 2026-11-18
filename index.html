@@ -680,6 +680,63 @@ body.show-site #pc-site{display:block;position:fixed;inset:0;z-index:3000;overfl
 .ps-st-btn{transition:.25s}.ps-st-btn:hover{transform:translateY(-3px);background:#2563eb}
 .ps-wa{animation:psPulse 2.4s infinite,psFloat 4s ease-in-out infinite}
 }
+
+/* ================= MOBILE HOME UI (only phones / tablets < 900px) ================= */
+@media(max-width:899px){
+    #home-view{padding:14px 16px 150px;}
+
+    /* ---- welcome card ---- */
+    #home-view .greeting-area{position:relative;overflow:hidden;margin-bottom:16px;padding:18px 18px 18px 20px;border-radius:24px;gap:12px;
+        background:linear-gradient(135deg,#0b1220 0%,#0f2a4a 55%,#0c4a6e 100%);box-shadow:0 14px 30px rgba(11,18,32,.28);}
+    #home-view .greeting-area::before{content:'';position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.45),rgba(56,189,248,0) 70%);top:-60px;right:-40px;pointer-events:none;}
+    #home-view .greeting-area::after{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,rgba(129,140,248,.35),rgba(129,140,248,0) 70%);bottom:-55px;left:30%;pointer-events:none;}
+    #home-view .greeting{position:relative;z-index:1;flex:1;min-width:0;}
+    #home-view .greeting::before{content:'WELCOME BACK';display:block;font-size:10px;font-weight:600;letter-spacing:2px;color:#7dd3fc;margin-bottom:4px;}
+    #home-view .greeting h2{font-size:21px;font-weight:700;color:#fff;letter-spacing:-.3px;line-height:1.25;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #home-view .greeting p{font-size:12.5px;color:#bae6fd;line-height:1.4;}
+    #home-view .profile-avatar{position:relative;z-index:1;flex-shrink:0;width:54px;height:54px;border:2px solid rgba(255,255,255,.75);box-shadow:0 0 0 4px rgba(56,189,248,.22),0 8px 18px rgba(0,0,0,.35);background-color:#fff;}
+
+    /* ---- banner slider ---- */
+    #home-view .slider-wrapper{aspect-ratio:16/8.4;max-height:260px;margin-bottom:24px;border-radius:22px;background:linear-gradient(135deg,#0f172a,#0c4a6e);box-shadow:0 14px 30px rgba(15,23,42,.2);}
+    #home-view .slider-wrapper::after{content:'';position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(to top,rgba(11,18,32,.55),rgba(11,18,32,0));pointer-events:none;z-index:1;}
+    #home-view .slider-dots{z-index:2;right:auto;left:50%;transform:translateX(-50%);bottom:10px;padding:5px 9px;gap:5px;background:rgba(15,23,42,.38);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:20px;}
+    #home-view .dot{width:6px;height:6px;}
+    #home-view .dot.active{width:18px;}
+
+    /* ---- section heading ---- */
+    #home-view .home-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+    #home-view .home-grid::before{content:'Explore';grid-column:1/-1;font-size:18px;font-weight:700;color:#0f172a;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;margin-bottom:-2px;}
+
+    /* ---- tiles ---- */
+    #home-view .tile{min-height:124px;padding:15px;border-radius:22px;align-items:flex-start;justify-content:space-between;gap:14px;text-align:left;
+        box-shadow:0 10px 22px rgba(15,23,42,.16);animation:mhTileIn .5s cubic-bezier(.16,1,.3,1) backwards;}
+    #home-view .tile:nth-child(1){animation-delay:.04s}#home-view .tile:nth-child(2){animation-delay:.08s}
+    #home-view .tile:nth-child(3){animation-delay:.12s}#home-view .tile:nth-child(4){animation-delay:.16s}
+    #home-view .tile:nth-child(5){animation-delay:.2s}#home-view .tile:nth-child(6){animation-delay:.24s}
+    #home-view .tile:nth-child(7){animation-delay:.28s}#home-view .tile:nth-child(8){animation-delay:.32s}
+    #home-view .tile::before{width:110px;height:110px;top:-38px;right:-34px;background:rgba(255,255,255,.15);}
+    #home-view .tile::after{content:'\f061';font-family:'Font Awesome 6 Free';font-weight:900;font-size:11px;color:#fff;
+        width:28px;height:28px;left:auto;top:auto;right:13px;bottom:13px;border-radius:50%;background:rgba(255,255,255,.24);border:1px solid rgba(255,255,255,.35);
+        display:flex;align-items:center;justify-content:center;pointer-events:none;}
+    #home-view .tile-ico{width:48px;height:48px;border-radius:16px;font-size:21px;background:rgba(255,255,255,.24);box-shadow:0 6px 14px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.35);}
+    #home-view .tile-lbl{font-size:14px;font-weight:600;max-width:calc(100% - 30px);text-align:left;}
+
+    /* first & last tile = wide cards */
+    #home-view .tile:first-child,#home-view .tile:last-child{grid-column:1/-1;min-height:84px;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;padding:14px 16px;}
+    #home-view .tile:first-child .tile-lbl,#home-view .tile:last-child .tile-lbl{font-size:15.5px;max-width:none;flex:1;}
+    #home-view .tile:first-child::after,#home-view .tile:last-child::after{top:50%;bottom:auto;transform:translateY(-50%);right:16px;}
+    #home-view .tile:first-child .tile-lbl,#home-view .tile:last-child .tile-lbl{padding-right:36px;}
+    #home-view .tile:active{transform:scale(.96);}
+}
+@keyframes mhTileIn{from{opacity:0;transform:translateY(16px) scale(.96);}to{opacity:1;transform:none;}}
+@media(max-width:899px) and (max-width:360px){
+    #home-view{padding:12px 12px 150px;}
+    #home-view .greeting h2{font-size:19px;}
+    #home-view .home-grid{gap:12px;}
+    #home-view .tile{min-height:112px;padding:13px;}
+    #home-view .tile-ico{width:44px;height:44px;font-size:19px;}
+    #home-view .tile-lbl{font-size:13px;}
+}
 </style>
 </head>
 <body class="show-site">
