@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Gyan Automation – Industrial Automation Training &amp; IT Solutions</title>
 <meta name="description" content="Gyan Automation offers practical Industrial Automation training (PLC, SCADA, HMI, VFD, Electrical Control Panel) and IT solutions – website development, software and digital marketing. Lucknow, Uttar Pradesh.">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0b1b3a">
 <link rel="canonical" href="https://gyanautomation.com/">
 <link rel="icon" href="https://gyanautomation.com/wp-content/uploads/2025/01/logo-300x300-1.jpeg">
@@ -925,6 +926,14 @@ body.show-site #pc-site.menu-open{overflow:hidden}
 #pc-site .ps-feat,#pc-site .ps-cl,#pc-site .ps-cg,#pc-site .ps-fg,#pc-site .ps-art{grid-template-columns:1fr}
 #pc-site .ps-logo{font-size:16px}
 }
+
+/* ---- video player (phone seek-bar + sizing) ---- */
+#modal-body .plyr{height:100%;width:100%;background:#000;}
+#modal-body .plyr__video-wrapper,#modal-body .plyr__video-embed{height:100%;}
+#modal-body video{max-height:100%;object-fit:contain;}
+.plyr input[type=range]{touch-action:none;-webkit-appearance:none;appearance:none;}
+.plyr--full-ui input[type=range]{height:22px;}
+@media(max-width:700px){.plyr__control--overlaid{padding:18px;}.plyr__controls{padding:10px 8px;}}
 </style>
 <style>
 /* ===== HEADER POLISH: avatar + Student Login + Store ===== */
@@ -1527,10 +1536,7 @@ const PHONE_DOMAIN = '@phone.gyanautomation.app';
 
 let state = { user: null, isAdmin: false, profile: null, batches: [], myPurchases: [], currentBatch: null, currentTab: 'overview', currentFolderTitle: '', paymentMethod: 'upi', processing: false, adminCurrentBatchId: null };
 const $ = id => document.getElementById(id);
-let SLIDER_IMAGES = [
-    "",
-    ""
-];
+let SLIDER_IMAGES = [];
 
 /* ================= UTILS ================= */
 function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(window._toastTimer); window._toastTimer = setTimeout(() => t.classList.remove('show'), 3000); }
@@ -1731,16 +1737,54 @@ async function loadStudentData() {
 
 function initSlider() {
     const track = $('sliderTrack'), dots = $('sliderDots'); if(!track) return;
-    track.innerHTML = SLIDER_IMAGES.map(src => `<img class="slide-img" src="${esc(src)}" alt="">`).join('');
-    dots.innerHTML = SLIDER_IMAGES.map((_, i) => `<span class="dot${i === 0 ? ' active' : ''}" onclick="goSlide(${i})"></span>`).join('');
-    window._slideIdx = 0; track.style.transform = 'translateX(0)';
+    const imgs = SLIDER_IMAGES.filter(u => u && String(u).trim());
+    const wrap = track.parentElement;
+    if(!imgs.length) { wrap.style.display = 'none'; clearInterval(window._sliderTimer); return; }
+    wrap.style.display = '';
+    track.innerHTML = imgs.map(src => `<img class="slide-img" src="${esc(src)}" alt="" draggable="false" onerror="this.style.visibility='hidden'">`).join('');
+    dots.innerHTML = imgs.map((_, i) => `<span class="dot${i === 0 ? ' active' : ''}" onclick="goSlide(${i})"></span>`).join('');
+    window._slideCount = imgs.length; window._slideIdx = 0; track.style.transform = 'translateX(0)';
+    startSliderTimer();
+    if(!wrap._swipeBound) { wrap._swipeBound = true; bindSliderSwipe(wrap, track); }
+}
+function startSliderTimer() {
     clearInterval(window._sliderTimer);
-    if(SLIDER_IMAGES.length > 1) window._sliderTimer = setInterval(() => goSlide((window._slideIdx + 1) % SLIDER_IMAGES.length), 3500);
+    if((window._slideCount || 0) > 1) window._sliderTimer = setInterval(() => goSlide(((window._slideIdx || 0) + 1) % window._slideCount), 3500);
 }
 function goSlide(i) {
+    const n = window._slideCount || 0; if(!n) return;
+    i = ((i % n) + n) % n;
     window._slideIdx = i;
-    $('sliderTrack').style.transform = `translateX(-${i * 100}%)`;
+    const track = $('sliderTrack'); if(!track) return;
+    track.style.transition = ''; track.style.transform = `translateX(-${i * 100}%)`;
     document.querySelectorAll('#sliderDots .dot').forEach((d, k) => d.classList.toggle('active', k === i));
+}
+/* Phone par touch-swipe (left/right) support */
+function bindSliderSwipe(wrap, track) {
+    let sx = 0, sy = 0, dx = 0, drag = false, lock = null;
+    wrap.style.touchAction = 'pan-y';
+    wrap.addEventListener('touchstart', e => {
+        if((window._slideCount || 0) < 2) return;
+        const t = e.touches[0]; sx = t.clientX; sy = t.clientY; dx = 0; drag = true; lock = null;
+        clearInterval(window._sliderTimer); track.style.transition = 'none';
+    }, { passive: true });
+    wrap.addEventListener('touchmove', e => {
+        if(!drag) return;
+        const t = e.touches[0]; dx = t.clientX - sx; const dy = t.clientY - sy;
+        if(lock === null && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        if(lock !== 'x') return;
+        const w = wrap.clientWidth || 1;
+        track.style.transform = `translateX(calc(-${(window._slideIdx || 0) * 100}% + ${dx}px))`;
+    }, { passive: true });
+    const end = () => {
+        if(!drag) return; drag = false;
+        const w = wrap.clientWidth || 1; track.style.transition = '';
+        let i = window._slideIdx || 0;
+        if(lock === 'x' && Math.abs(dx) > w * 0.15) i += dx < 0 ? 1 : -1;
+        goSlide(i); startSliderTimer();
+    };
+    wrap.addEventListener('touchend', end, { passive: true });
+    wrap.addEventListener('touchcancel', end, { passive: true });
 }
 
 function switchView(viewId) {
@@ -1761,7 +1805,7 @@ function renderBatches() {
     const courses = state.batches.filter(b => !b.kind);
     if(courses.length === 0) { box.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><h3>No Courses Available</h3><p>Check back later for new batches</p></div>'; return; }
     box.innerHTML = courses.map(b => {
-        const img = b.image || SLIDER_IMAGES[0];
+        const img = b.image || (SLIDER_IMAGES[0]||'');
         const isNew = b.createdAt > Date.now() - 86400000*7;
         const owned = isPurchased(b.id);
         return `<div class="batch-card" onclick="openBatchDetails('${b.id}')">
@@ -1792,7 +1836,7 @@ function renderMyCourses() {
         const exp = p ? p.expiry : 0;
         const isExp = exp < Date.now();
         return `<div class="course-card" onclick="openBatchDetails('${b.id}')">
-            <div class="course-image" style="background-image:url('${esc(b.image || SLIDER_IMAGES[0])}')"></div>
+            <div class="course-image" style="background-image:url('${esc(b.image || (SLIDER_IMAGES[0]||''))}')"></div>
             <div class="course-details">
                 <div class="course-title">${esc(b.title)}</div>
                 <div class="course-expiry">
@@ -1934,20 +1978,61 @@ function playVideoFromDetails(itemId) {
         const room = item.url ? item.url.split('/').pop() : 'ga-live';
         openModal(item.title, `<iframe src="https://meet.jit.si/${room}" style="width:100%;height:100%;border:0;" allow="camera;microphone"></iframe>`); return;
     }
-    let html = '', embed = false;
-    if(item.url && (item.url.includes('youtube.com') || item.url.includes('youtu.be'))) {
-        const vid = item.url.split('v=')[1] || item.url.split('/').pop();
-        html = `<div id="player" data-plyr-provider="youtube" data-plyr-embed-id="${vid}" style="width:100%; height:100%;"></div>`;
-    } else if(/^https:\/\/(iframe\.mediadelivery\.net|player\.vimeo\.com|[\w.-]*cloudflarestream\.com|iframe\.videodelivery\.net)\//.test(item.url || '')) {
-        embed = true;
-        html = `<iframe src="${esc(item.url)}" style="width:100%;height:100%;border:0;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen" allowfullscreen></iframe>`;
-    } else if(item.type === 'pdf') {
-        html = `<iframe src="${item.url}" style="width:100%;height:100%;border:0;"></iframe>`;
+    const rawUrl = String(item.url || '').trim();
+    const media = parseMediaUrl(rawUrl, item.type);
+    let html = '', usePlyr = false;
+    if(location.protocol === 'file:' && (media.kind === 'youtube' || media.kind === 'vimeo')) {
+        html = `<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;color:#475569;"><i class="fas fa-globe" style="font-size:34px;color:#0ea5e9;"></i><p style="font-size:14px;line-height:1.6;">Ye page computer se seedha (file://) khula hai, isliye YouTube/Vimeo video yahan nahi chalega (Error 153).<br>Site ko <b>https://</b> link (GitHub Pages) se kholein, wahan ye chalega.</p><a href="${esc(rawUrl)}" target="_blank" rel="noopener" style="background:#0ea5e9;color:#fff;padding:12px 22px;border-radius:12px;font-weight:600;text-decoration:none;font-size:13px;">Video browser me kholein</a></div>`;
+    } else if(media.kind === 'youtube') {
+        html = `<div id="player" data-plyr-provider="youtube" data-plyr-embed-id="${media.id}" style="width:100%;height:100%;"></div>`; usePlyr = true;
+    } else if(media.kind === 'vimeo') {
+        html = `<div id="player" data-plyr-provider="vimeo" data-plyr-embed-id="${media.id}" style="width:100%;height:100%;"></div>`; usePlyr = true;
+    } else if(media.kind === 'iframe') {
+        html = `<iframe src="${esc(media.src)}" style="width:100%;height:100%;border:0;" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen" allowfullscreen></iframe>`;
+    } else if(media.kind === 'video') {
+        html = `<video id="player" playsinline webkit-playsinline controls preload="metadata" style="width:100%;height:100%;background:#000;"><source src="${esc(media.src)}"${media.mime ? ` type="${media.mime}"` : ''} /></video>`; usePlyr = true;
     } else {
-        html = `<video id="player" playsinline controls style="width:100%; height:100%;"><source src="${item.url}" type="video/mp4" /></video>`;
+        html = `<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;color:#475569;"><i class="fas fa-triangle-exclamation" style="font-size:34px;color:#f59e0b;"></i><p style="font-size:14px;line-height:1.6;">${media.note === 'vimeo-share' ? 'Ye Vimeo ka share link hai, isme video ID nahi hoti.<br>Vimeo me video ke <b>Copy link</b> se <b>vimeo.com/1234567/abcdef</b> jaisa link, ya embed code ka <b>player.vimeo.com/video/...</b> wala link use karein.' : 'Ye link in-app play nahi ho sakta.<br>Valid YouTube, Vimeo, Google Drive ya direct video (.mp4) link use karein.'}</p>${/^https?:\/\//i.test(rawUrl) ? `<a href="${esc(rawUrl)}" target="_blank" rel="noopener" style="background:#0ea5e9;color:#fff;padding:12px 22px;border-radius:12px;font-weight:600;text-decoration:none;font-size:13px;">Link browser me kholein</a>` : ''}</div>`;
     }
     openModal(item.title, html);
-    if(item.type !== 'pdf' && !embed) setTimeout(() => { if(window.Plyr) window.player = new Plyr('#player'); }, 100);
+    if(usePlyr) setTimeout(() => {
+        if(!window.Plyr || !$('player')) return;
+        try { window.player = new Plyr('#player', { playsinline: true, controls: ['play-large','play','progress','current-time','mute','volume','settings','pip','fullscreen'], youtube: { rel: 0, modestbranding: 1, playsinline: 1 }, vimeo: { dnt: true, playsinline: true } }); }
+        catch(e) { console.warn('plyr', e); }
+    }, 100);
+}
+
+/* Video link ko pehchaan kar sahi player type deta hai (YouTube / Vimeo / Drive / direct file) */
+function parseMediaUrl(url, type) {
+    if(!url) return { kind: 'none' };
+    if(!/^https?:\/\//i.test(url)) { if(/^\/\//.test(url)) url = 'https:' + url; else if(/^[\w-]+(\.[\w-]+)+\//.test(url)) url = 'https://' + url; else return { kind: 'none' }; }
+    let u; try { u = new URL(url); } catch(e) { return { kind: 'none' }; }
+    const host = u.hostname.replace(/^www\.|^m\./, '').toLowerCase(), path = u.pathname;
+    // YouTube: watch?v=, youtu.be/, shorts/, live/, embed/ (extra params jaise ?si= ignore)
+    if(host === 'youtu.be') { const id = path.split('/')[1]; if(/^[\w-]{11}$/.test(id || '')) return { kind: 'youtube', id }; }
+    if(/(^|\.)youtube(-nocookie)?\.com$/.test(host)) {
+        let id = u.searchParams.get('v');
+        if(!id) { const m = path.match(/\/(?:embed|shorts|live|v)\/([\w-]{11})/); if(m) id = m[1]; }
+        if(/^[\w-]{11}$/.test(id || '')) return { kind: 'youtube', id };
+    }
+    // Vimeo: vimeo.com/123456789, vimeo.com/123456789/abcdef (private hash), player.vimeo.com/video/123456789
+    if(host === 'vimeo.com' && /^\/share\//i.test(path)) return { kind: 'none', note: 'vimeo-share' };
+    if(host === 'vimeo.com' || host === 'player.vimeo.com') {
+        const m = path.match(/(?:\/video)?\/(\d{6,})(?:\/([a-z0-9]+))?/i);
+        if(m) { const h = m[2] || u.searchParams.get('h'); return h ? { kind: 'iframe', src: `https://player.vimeo.com/video/${m[1]}?h=${h}&dnt=1` } : { kind: 'vimeo', id: m[1] }; }
+    }
+    // Google Drive
+    if(host === 'drive.google.com') { const m = path.match(/\/file\/d\/([\w-]+)/) || (u.searchParams.get('id') ? [0, u.searchParams.get('id')] : null); if(m) return { kind: 'iframe', src: `https://drive.google.com/file/d/${m[1]}/preview` }; }
+    // Trusted embed players (Bunny, Cloudflare Stream, etc.)
+    if(/^(iframe\.mediadelivery\.net|[\w.-]*cloudflarestream\.com|iframe\.videodelivery\.net)$/.test(host)) return { kind: 'iframe', src: url };
+    if(type === 'pdf' || /\.pdf($|\?)/i.test(path)) return { kind: 'iframe', src: url };
+    // Direct video files
+    const ext = (path.match(/\.(mp4|m4v|webm|ogg|ogv|mov|mkv)$/i) || [])[1];
+    if(ext) { const e = ext.toLowerCase(); return { kind: 'video', src: url, mime: ({ mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', ogg: 'video/ogg', ogv: 'video/ogg', mov: 'video/mp4', mkv: '' })[e] }; }
+    if(/\.m3u8($|\?)/i.test(path)) return { kind: 'video', src: url, mime: 'application/x-mpegURL' };
+    // Pehchaan nahi hua, par type video hai to browser ko khud try karne do (mime bina)
+    if(type === 'video') return { kind: 'video', src: url };
+    return { kind: 'iframe', src: url };
 }
 
 /* ================= PAYMENT GATEWAY ================= */
@@ -2086,7 +2171,7 @@ function openCategory(key) {
             body.innerHTML = L.map(b => {
                 const own = isPurchased(b.id);
                 return `<div class="batch-card" style="margin-bottom:16px;" onclick="openBatchDetails('${b.id}')">
-                    <div class="batch-img" style="background-image:url('${esc(b.image || SLIDER_IMAGES[0])}')"></div>
+                    <div class="batch-img" style="background-image:url('${esc(b.image || (SLIDER_IMAGES[0]||''))}')"></div>
                     <div class="batch-body">
                         <div class="batch-title">${esc(b.title)}</div>
                         ${b.desc ? `<div class="batch-desc">${esc(b.desc)}</div>` : ''}
@@ -2184,7 +2269,7 @@ function renderAdminBatches() {
         if(list.length === 0) { $('admin-batch-list').innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;">No batches yet.</p>'; return; }
         $('admin-batch-list').innerHTML = list.map(b => `
             <div class="admin-batch-row">
-                <div class="admin-batch-thumb" style="background-image:url('${esc(b.image||SLIDER_IMAGES[0])}')"></div>
+                <div class="admin-batch-thumb" style="background-image:url('${esc(b.image||(SLIDER_IMAGES[0]||''))}')"></div>
                 <div class="conv-body">
                     <div class="conv-name">${esc(b.title)}</div>
                     <div class="conv-preview">₹ ${b.price} • ${b.days} Days validity</div>
@@ -2198,7 +2283,7 @@ function renderAdminBatches() {
 
 async function createBatch(kind) {
     const title = $('abTitle').value.trim(); const price = Number($('abPrice').value); const days = Number($('abDays').value);
-    const image = $('abImg').value.trim() || SLIDER_IMAGES[0]; const desc = $('abDesc').value.trim();
+    const image = $('abImg').value.trim() || (SLIDER_IMAGES[0]||''); const desc = $('abDesc').value.trim();
     if(!title) return toast('Enter batch title');
     try {
         const data = { title, price, days, image, desc, createdAt: Date.now() };
@@ -2854,7 +2939,7 @@ function renderAdminStore() {
         if(list.length === 0) { $('admin-store-list').innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;">No store items yet.</p>'; return; }
         $('admin-store-list').innerHTML = list.map(b => `
             <div class="admin-batch-row">
-                <div class="admin-batch-thumb" style="background-image:url('${esc(b.image||SLIDER_IMAGES[0])}')"></div>
+                <div class="admin-batch-thumb" style="background-image:url('${esc(b.image||(SLIDER_IMAGES[0]||''))}')"></div>
                 <div class="conv-body">
                     <div class="conv-name">${esc(b.title)} <span style="font-size:10px;background:#e0f2fe;color:#0ea5e9;padding:2px 6px;border-radius:4px;margin-left:4px;">${b.kind.toUpperCase()}</span></div>
                     <div class="conv-preview">₹ ${b.price}</div>
@@ -2868,7 +2953,7 @@ function renderAdminStore() {
 
 async function createStoreItem() {
     const title = $('stTitle').value.trim(); const price = Number($('stPrice').value); const kind = $('stKind').value;
-    const image = $('stImg').value.trim() || SLIDER_IMAGES[0]; const desc = $('stDesc').value.trim();
+    const image = $('stImg').value.trim() || (SLIDER_IMAGES[0]||''); const desc = $('stDesc').value.trim();
     if(!title) return toast('Enter title');
     try {
         await db.collection('batches').add({ title, price, days: 365, image, desc, kind, createdAt: Date.now() });
