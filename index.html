@@ -1300,6 +1300,7 @@ body.show-site #pc-site.menu-open{overflow:hidden}
             <div class="admin-tab" data-tab="students" onclick="adminTab('students')"><i class="fas fa-users"></i> Students</div>
             <div class="admin-tab" data-tab="content" onclick="adminTab('content')"><i class="fas fa-cog"></i> App Settings</div>
             <div class="admin-tab" data-tab="store" onclick="adminTab('store')"><i class="fas fa-store"></i> Store</div>
+            <div class="admin-tab" data-tab="classes" onclick="adminTab('classes')"><i class="fas fa-video"></i> Classes</div>
         </div>
         <div class="admin-content" id="adminContent">
             <div id="admin-batches" class="admin-pane active"></div>
@@ -1308,6 +1309,7 @@ body.show-site #pc-site.menu-open{overflow:hidden}
             <div id="admin-students" class="admin-pane"></div>
             <div id="admin-content-tab" class="admin-pane"></div>
             <div id="admin-store" class="admin-pane"></div>
+            <div id="admin-classes" class="admin-pane"></div>
         </div>
     </div>
 
@@ -2165,7 +2167,7 @@ async function processPayment() {
 }
 
 /* ================= RAZORPAY CHECKOUT (direct, bina backend / Cloud Functions ke) ================= */
-const RAZORPAY_KEY_ID = 'rzp_test_U1mAbCZW9ywdQE';
+const RAZORPAY_KEY_ID = 'rzp_test_U1l2jitWg2MNdE';
 
 function resetPayBtn(btn, b) { btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false; state.processing = false; }
 
@@ -2350,6 +2352,7 @@ function adminTab(tab) {
     if(tab === 'students') renderAdminStudents();
     if(tab === 'content') renderAdminContentTab();
     if(tab === 'store') renderAdminStore();
+    if(tab === 'classes') renderAdminClasses();
 }
 
 function renderAdminBatches() {
@@ -3521,6 +3524,172 @@ if(ac){var d=document.createElement('div');d.style.cssText='text-align:center;ma
  var dm=$('.drawer-menu'),lo=dm&&dm.lastElementChild;
  if(dm&&lo){var li=document.createElement('li');li.innerHTML='<i class="fas fa-bag-shopping"></i> Online Store';li.onclick=function(){window.psStore();toggleDrawer();};dm.insertBefore(li,lo);}
 })();
+</script>
+
+<style>
+.gc-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-right:6px;letter-spacing:.3px}
+.gc-rec{background:#e0f2fe;color:#0369a1}.gc-live{background:#fee2e2;color:#dc2626}
+.gc-live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#dc2626;margin-right:4px;animation:gcp 1.2s infinite}
+@keyframes gcp{50%{opacity:.25}}
+.gc-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #eef2f5;border-radius:12px;margin-bottom:8px;background:#fff}
+.gc-row .gc-main{flex:1;min-width:0}.gc-title{font-size:13px;font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gc-sub{font-size:11px;color:#94a3b8;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gc-btn{border:none;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit}
+.gc-edit{background:#e0f2fe;color:#0369a1}.gc-del{background:#fee2e2;color:#ef4444}.gc-cancel{background:#f1f5f9;color:#475569;margin-top:10px;width:100%;padding:12px}
+.gc-hint{font-size:11px;color:#94a3b8;margin:-8px 0 14px;line-height:1.5}
+.gc-lbl{font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:6px}
+</style>
+<script>
+/* ============ SMART PARSER (used on Save) ============
+   Returns { kind, value } or { error }
+   kind: 'youtube' -> value = Base64(11-char video id)
+         'meet'    -> value = Google Meet URL
+         'direct'  -> value = .mp4 / .m3u8 URL
+         'embed'   -> value = iframe src / any embeddable page URL        */
+function gcParseVideoInput(raw){
+  let s = String(raw || '').trim();
+  if(!s) return { error: 'Video link ya embed code paste karo.' };
+  if(/<iframe/i.test(s)){                       // full <iframe ...> embed code -> pull out src
+    const m = s.match(/\bsrc\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/i);
+    if(!m) return { error: 'Iframe code me src nahi mila.' };
+    s = (m[1] || m[2] || m[3]).trim().replace(/&amp;/g, '&');
+  }
+  if(s.indexOf('//') === 0) s = 'https:' + s;
+  if(!/^https?:\/\//i.test(s)){
+    if(/^[\w-]+(\.[\w-]+)+(\/|$)/.test(s)) s = 'https://' + s; else return { error: 'Ye valid link/embed code nahi hai.' };
+  }
+  let u; try{ u = new URL(s); }catch(e){ return { error: 'Link galat hai.' }; }
+  const host = u.hostname.replace(/^www\.|^m\./, '').toLowerCase(), path = u.pathname;
+
+  // 1) YouTube (watch?v= , youtu.be/ , /embed/ , /shorts/ , /live/)  -> Base64 of the 11-char id
+  let id = null;
+  if(host === 'youtu.be') id = path.split('/')[1];
+  else if(/(^|\.)youtube(-nocookie)?\.com$/.test(host)){
+    id = u.searchParams.get('v');
+    if(!id){ const m = path.match(/\/(?:embed|shorts|live|v)\/([\w-]{11})/); if(m) id = m[1]; }
+  }
+  if(id && /^[\w-]{11}$/.test(id)) return { kind: 'youtube', value: btoa(id) };
+
+  // 2) Google Meet
+  if(host === 'meet.google.com' || (host === 'g.co' && /^\/meet\//i.test(path))) return { kind: 'meet', value: u.href };
+
+  // 3) Direct video stream
+  if(/\.(mp4|m4v|webm|mov|m3u8)$/i.test(path)) return { kind: 'direct', value: u.href };
+
+  // 4) Vimeo / Google Drive video -> proper embed url
+  if(host === 'vimeo.com'){ const m = path.match(/^\/(\d{6,})(?:\/([a-z0-9]+))?/i); if(m) return { kind: 'embed', value: 'https://player.vimeo.com/video/' + m[1] + (m[2] ? '?h=' + m[2] : '') }; }
+  if(host === 'drive.google.com'){ const m = path.match(/\/file\/d\/([\w-]+)/) || (u.searchParams.get('id') ? [0, u.searchParams.get('id')] : null); if(m) return { kind: 'embed', value: 'https://drive.google.com/file/d/' + m[1] + '/preview' }; }
+
+  // 5) Anything else (Bunny Stream, VdoCipher, Cloudflare Stream...) -> iframe embed
+  return { kind: 'embed', value: u.href };
+}
+
+(function(){
+  const COL = 'classes';                       // Firestore collection name
+  let editId = null, cache = [];
+  const q = id => document.getElementById(id);
+  const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const T = m => (typeof toast === 'function' ? toast(m) : alert(m));
+  const MODES = { recorded: 'Recorded Video', meet: 'Live Class (Google Meet)', live: 'Live Stream (YouTube/Embed)' };
+
+  window.renderAdminClasses = async function(){
+    const box = q('admin-classes'); if(!box) return;
+    editId = null;
+    box.innerHTML = `
+      <div class="admin-card" id="gcFormCard">
+        <h3><i class="fas fa-video" style="color:#0ea5e9;"></i> <span id="gcFormTitle">Add Batch Class</span></h3>
+        <label class="gc-lbl">Lecture Title</label>
+        <input id="gcTitle" class="f-input" placeholder="e.g. RLC Circuit - Lecture 03">
+        <div class="f-row">
+          <div><label class="gc-lbl">Class Mode / Type</label>
+            <select id="gcMode" class="f-input">
+              <option value="recorded">Recorded Video</option>
+              <option value="meet">Live Class (Google Meet)</option>
+              <option value="live">Live Stream (YouTube/Embed)</option>
+            </select></div>
+          <div><label class="gc-lbl">Batch (optional)</label>
+            <select id="gcBatch" class="f-input"><option value="">All Students / General</option></select></div>
+        </div>
+        <label class="gc-lbl">Paste Video Link (YouTube / Google Meet / Direct MP4) OR Full &lt;iframe&gt; Embed Code</label>
+        <textarea id="gcInput" class="f-input" rows="4" placeholder="https://youtu.be/xxxxxxxxxxx   |   https://meet.google.com/abc-defg-hij   |   https://site.com/video.mp4   |   <iframe src=&quot;...&quot;></iframe>"></textarea>
+        <div class="gc-hint">Auto-detect: iframe &rarr; src nikalta hai &bull; YouTube &rarr; Video ID Base64 me &bull; Meet &rarr; live link &bull; .mp4/.m3u8 &rarr; direct stream</div>
+        <label class="gc-lbl">Class Notes PDF Link (optional – Google Drive)</label>
+        <input id="gcNotes" class="f-input" placeholder="https://drive.google.com/file/d/.../view">
+        <button class="admin-btn" id="gcSaveBtn" onclick="gcSave()"><i class="fas fa-save"></i> Save Class</button>
+        <button class="gc-btn gc-cancel" id="gcCancelBtn" style="display:none" onclick="gcCancel()">Cancel Edit</button>
+      </div>
+      <div class="admin-card">
+        <h3><i class="fas fa-list" style="color:#0ea5e9;"></i> All Classes (<span id="gcCount">0</span>)</h3>
+        <div id="gcList"><div style="text-align:center;padding:10px;"><i class="fas fa-spinner fa-spin"></i></div></div>
+      </div>`;
+    try{                                       // batch dropdown (reads your existing 'batches' collection)
+      const bs = await db.collection('batches').get();
+      q('gcBatch').innerHTML += bs.docs.map(d => `<option value="${E(d.id)}">${E(d.data().title || d.id)}</option>`).join('');
+    }catch(e){ console.warn('batches', e); }
+    gcLoad();
+  };
+
+  async function gcLoad(){
+    const list = q('gcList'); if(!list) return;
+    try{
+      const snap = await db.collection(COL).orderBy('createdAt', 'asc').get();
+      cache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      q('gcCount').textContent = cache.length;
+      if(!cache.length){ list.innerHTML = '<p style="font-size:13px;color:#94a3b8;text-align:center;padding:10px;">Abhi koi class add nahi hui.</p>'; return; }
+      list.innerHTML = cache.map(c => {
+        const isLive = c.mode === 'meet' || c.mode === 'live';
+        return `<div class="gc-row"><div class="gc-main">
+          <div class="gc-title">${E(c.title)}</div>
+          <div class="gc-sub"><span class="gc-badge ${isLive ? 'gc-live' : 'gc-rec'}">${isLive ? '<i></i>LIVE' : 'RECORDED'}</span>${E(MODES[c.mode] || c.mode)} &bull; ${E(c.kind)}${c.notes ? ' &bull; 📄 Notes' : ''}</div></div>
+          <button class="gc-btn gc-edit" onclick="gcEdit('${c.id}')"><i class="fas fa-pen"></i> Edit</button>
+          <button class="gc-btn gc-del" onclick="gcDelete('${c.id}')"><i class="fas fa-trash"></i> Delete</button></div>`;
+      }).join('');
+    }catch(e){
+      list.innerHTML = `<p style="font-size:13px;color:#ef4444;text-align:center;padding:10px;">${e.code === 'permission-denied' ? 'Permission denied – Firestore rules me "classes" collection allow karo (neeche rules dekho).' : E(e.message)}</p>`;
+    }
+  }
+
+  window.gcSave = async function(){
+    const title = q('gcTitle').value.trim(), mode = q('gcMode').value, raw = q('gcInput').value.trim(),
+          notes = q('gcNotes').value.trim(), batchId = q('gcBatch').value;
+    if(!title) return T('Lecture title likho.');
+    const p = gcParseVideoInput(raw); if(p.error) return T(p.error);
+    if(mode === 'meet' && p.kind !== 'meet') return T('"Live Class (Google Meet)" me meet.google.com ka link chahiye.');
+    if(mode !== 'meet' && p.kind === 'meet') return T('Meet link sirf "Live Class (Google Meet)" mode me use hota hai.');
+    if(notes && !/^https?:\/\//i.test(notes)) return T('Notes link https:// se shuru hona chahiye.');
+    const data = { title, mode, kind: p.kind, src: p.value, raw: raw.slice(0, 3000), notes, batchId, updatedAt: Date.now() };
+    const btn = q('gcSaveBtn'); btn.disabled = true;
+    try{
+      if(editId) await db.collection(COL).doc(editId).update(data);
+      else { data.createdAt = Date.now(); await db.collection(COL).add(data); }
+      T(editId ? 'Class updated!' : 'Class saved!');
+      window.renderAdminClasses();
+    }catch(e){ T(e.code === 'permission-denied' ? 'Permission denied – rules check karo.' : e.message); }
+    btn.disabled = false;
+  };
+
+  window.gcEdit = function(id){
+    const c = cache.find(x => x.id === id); if(!c) return;
+    editId = id;
+    q('gcTitle').value = c.title || ''; q('gcMode').value = c.mode || 'recorded'; q('gcBatch').value = c.batchId || '';
+    q('gcInput').value = c.raw || ''; q('gcNotes').value = c.notes || '';
+    q('gcFormTitle').textContent = 'Edit Class'; q('gcSaveBtn').innerHTML = '<i class="fas fa-save"></i> Update Class';
+    q('gcCancelBtn').style.display = 'block';
+    q('gcFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  window.gcCancel = function(){ window.renderAdminClasses(); };
+  window.gcDelete = async function(id){
+    if(!confirm('Is class ko delete karna hai?')) return;
+    try{ await db.collection(COL).doc(id).delete(); T('Class deleted'); gcLoad(); }catch(e){ T(e.message); }
+  };
+})();
+</script>
+
+<script>
+/* Student drawer link -> player.html */
+(function(){var dm=document.querySelector('.drawer-menu');if(!dm)return;var li=document.createElement('li');
+li.innerHTML='<i class="fas fa-circle-play"></i> Live &amp; Recorded Classes';
+li.onclick=function(){location.href='player.html';};dm.insertBefore(li,dm.lastElementChild);})();
 </script>
 </body>
 </html>
