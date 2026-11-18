@@ -489,7 +489,7 @@ body.show-site #pc-site{display:block;position:fixed;inset:0;z-index:3000;overfl
 .ps-user:hover{color:var(--blue);transform:scale(1.08)}
 /* banners */
 .ps-ban{padding:34px 0 18px;background:#f8fafc}
-.ps-view{overflow:hidden;border-radius:18px}
+.ps-view{overflow:hidden;border-radius:18px;touch-action:pan-y}
 .ps-track{display:flex;gap:20px;transition:transform .7s cubic-bezier(.4,0,.2,1)}
 .ps-bn{background-color:#1e3a8a;flex:0 0 calc((100% - (var(--pv) - 1)*20px)/var(--pv));aspect-ratio:16/7.2;border-radius:18px;overflow:hidden;position:relative;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:20px;background-size:cover;background-position:center;box-shadow:0 10px 26px rgba(15,23,42,.18);font-weight:800;font-size:22px;line-height:1.2}
 .ps-bn small{font-size:13px;font-weight:600;opacity:.9;margin-top:4px}
@@ -3207,11 +3207,51 @@ const CERTS = {
     g('psDots').querySelectorAll('i').forEach(d => d.onclick = () => { idx = +d.dataset.i; move(pages, pv); });
     idx = 0; move(pages, pv);
     clearInterval(timer);
-    if(loopOn) timer = setInterval(() => {
-      if(!mq.matches) return;
-      idx++; move(pages, pv);
-      if(idx >= pages) setTimeout(() => { idx = 0; move(pages, pv, true); }, 750);
+    startTimer(pages, pv, loopOn);
+    bindSwipe(pages, pv, loopOn);
+  }
+  function startTimer(pages, pv, loopOn) {
+    clearInterval(timer);
+    if(!loopOn) return;
+    timer = setInterval(() => {
+      if(document.hidden) return;
+      next(pages, pv);
     }, 3200);
+  }
+  function next(pages, pv) {
+    idx++; move(pages, pv);
+    if(idx >= pages) setTimeout(() => { idx = 0; move(pages, pv, true); }, 750);
+  }
+  /* mobile touch swipe */
+  function bindSwipe(pages, pv, loopOn) {
+    const v = g('psTrack').parentElement;
+    v._ps = {pages, pv, loopOn};
+    if(v._swipeBound) return; v._swipeBound = true;
+    let x0 = 0, y0 = 0, dx = 0, drag = false, lock = null;
+    v.addEventListener('touchstart', e => {
+      const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; dx = 0; drag = true; lock = null;
+      clearInterval(timer);
+    }, {passive: true});
+    v.addEventListener('touchmove', e => {
+      if(!drag) return;
+      const t = e.touches[0]; dx = t.clientX - x0; const dy = t.clientY - y0;
+      if(lock === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if(lock !== 'x') return;
+      const tr = g('psTrack'), first = tr.firstElementChild; if(!first) return;
+      tr.style.transition = 'none';
+      tr.style.transform = 'translateX(' + (-(idx * (first.offsetWidth + 20)) + dx) + 'px)';
+    }, {passive: true});
+    const end = () => {
+      if(!drag) return; drag = false;
+      const {pages, pv, loopOn} = v._ps, tr = g('psTrack');
+      tr.style.transition = '';
+      if(lock === 'x' && Math.abs(dx) > 40) {
+        if(dx < 0) { idx = Math.min(idx + 1, pages); move(pages, pv); if(idx >= pages) setTimeout(() => { idx = 0; move(pages, pv, true); }, 750); }
+        else { idx = idx > 0 ? idx - 1 : pages - 1; move(pages, pv, idx === pages - 1); }
+      } else move(pages, pv);
+      startTimer(pages, pv, loopOn);
+    };
+    v.addEventListener('touchend', end); v.addEventListener('touchcancel', end);
   }
   function move(pages, pv, instant) {
     const t = g('psTrack'), first = t.firstElementChild; if(!first) return;
@@ -3221,7 +3261,14 @@ const CERTS = {
     g('psDots').querySelectorAll('i').forEach((d, i) => d.classList.toggle('on', i === (idx % pages)));
   }
   banners();
-  window.addEventListener('resize', () => { idx = 0; banners(); });
+  let _lastW = window.innerWidth;
+  window.addEventListener('resize', () => {
+    /* mobile me address-bar hide/show se height resize aata hai - sirf width badle tab rebuild */
+    if(window.innerWidth === _lastW) return;
+    _lastW = window.innerWidth; idx = 0; banners();
+  });
+  window.addEventListener('orientationchange', () => setTimeout(() => { _lastW = window.innerWidth; idx = 0; banners(); }, 250));
+  window.addEventListener('load', () => { idx = 0; banners(); });
   /* app config (logo/slider) badalne par site bhi update ho */
   if(typeof initSlider === 'function') { const _o = initSlider; initSlider = function(){ _o.apply(this, arguments); banners(); }; }
   const li = g('loginLogoImg');
