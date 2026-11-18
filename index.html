@@ -1652,8 +1652,9 @@ async function doLogin(e) {
     const email = toAuthEmail(id);
     if(!email) return toast('Enter valid email/phone');
     $('loginBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; $('loginBtn').disabled = true;
+    _claimNext = true;
     try { await auth.signInWithEmailAndPassword(email, pass); }
-    catch(err) { toast(err.message); $('loginBtn').innerHTML = 'Login <i class="fas fa-arrow-right"></i>'; $('loginBtn').disabled = false; }
+    catch(err) { _claimNext = false; toast(err.message); $('loginBtn').innerHTML = 'Login <i class="fas fa-arrow-right"></i>'; $('loginBtn').disabled = false; }
 }
 
 async function doRegister(e) {
@@ -1664,10 +1665,11 @@ async function doRegister(e) {
     if(pass.length < 6) return toast('Password must be 6+ chars');
     $('regBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...'; $('regBtn').disabled = true;
     try {
+        _claimNext = true;
         const cred = await auth.createUserWithEmailAndPassword(email, pass);
-        await db.collection('users').doc(cred.user.uid).set({ name, email, phone: id.includes('@') ? '' : id, joined: Date.now() });
+        await db.collection('users').doc(cred.user.uid).set({ name, email, phone: id.includes('@') ? '' : id, joined: Date.now() }, { merge: true });
         toast('Account created successfully!');
-    } catch(err) { toast(err.message); $('regBtn').innerHTML = 'Create Account <i class="fas fa-user-plus"></i>'; $('regBtn').disabled = false; }
+    } catch(err) { _claimNext = false; toast(err.message); $('regBtn').innerHTML = 'Create Account <i class="fas fa-user-plus"></i>'; $('regBtn').disabled = false; }
 }
 
 async function resetPassword() {
@@ -1678,12 +1680,49 @@ async function resetPassword() {
     catch(e) { toast(e.message); }
 }
 
-function logout() { stopAdminChat(); if(window._unsubChat) { window._unsubChat(); window._unsubChat = null; } auth.signOut(); }
+/* ================= SINGLE DEVICE LOGIN (ek time pe ek hi device) ================= */
+const SID_KEY = 'ga_sid';
+let _sessUnsub = null, _claimNext = false;
+function lsGet(k) { try { return localStorage.getItem(k); } catch(e) { return null; } }
+function lsSet(k, v) { try { if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch(e) {} }
+function newSid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10); }
+function stopSessionGuard() { if(_sessUnsub) { try { _sessUnsub(); } catch(e) {} _sessUnsub = null; } }
+function kickSession() {
+    stopSessionGuard(); lsSet(SID_KEY, null);
+    toast('Aapka account kisi dusre device par login ho gaya hai. Is device se logout kar diya gaya.');
+    logout();
+}
+async function startSessionGuard(user) {
+    stopSessionGuard();
+    const ref = db.collection('users').doc(user.uid);
+    const claim = async () => {
+        const id = newSid(); lsSet(SID_KEY, id);
+        await ref.set({ activeSession: { id: id, at: Date.now(), device: String(navigator.userAgent || '').slice(0, 120) } }, { merge: true });
+    };
+    try {
+        if(_claimNext) { _claimNext = false; await claim(); }
+        else {
+            const snap = await ref.get(server_first());
+            const cur = snap.exists ? snap.data().activeSession : null;
+            if(!cur || !cur.id) await claim();
+            else if(cur.id !== lsGet(SID_KEY)) return kickSession();
+        }
+    } catch(e) { console.warn('session guard (rules check karo)', e); return; }
+    if(!auth.currentUser || auth.currentUser.uid !== user.uid) return;
+    _sessUnsub = ref.onSnapshot(s => {
+        const cur = s.exists ? s.data().activeSession : null;
+        if(cur && cur.id && cur.id !== lsGet(SID_KEY)) kickSession();
+    }, e => console.warn('session watch', e));
+}
+function server_first() { return { source: 'server' }; }
+
+function logout() { stopSessionGuard(); lsSet(SID_KEY, null); stopAdminChat(); if(window._unsubChat) { window._unsubChat(); window._unsubChat = null; } auth.signOut(); }
 
 let _authNullTimer = null, _loadedUid = null, _firstAuth = true;
 function showLoginScreen() {
     document.body.classList.add('show-site');
     state.user = null; state.isAdmin = false; _loadedUid = null;
+    stopSessionGuard();
     if(window.GA) GA.stop();
     $('auth-screen').classList.remove('hide');
     $('app-screen').classList.remove('active');
@@ -1701,6 +1740,7 @@ auth.onAuthStateChanged(async user => {
         _loadedUid = user.uid;
         try { const adminDoc = await db.collection('admins').doc(user.uid).get(); state.isAdmin = adminDoc.exists; }
         catch(e) { console.warn('admin check', e); state.isAdmin = false; }
+        if(!state.isAdmin) startSessionGuard(user);   // admin multi-device allowed, student sirf ek device
         if(state.isAdmin) {
             $('auth-screen').classList.add('hide');
             $('app-screen').classList.remove('active');
@@ -2075,15 +2115,18 @@ function initiateBuy() {
 
 function openPayment() {
     const b = state.currentBatch;
+    if(!state.saving) { state.processing = false; state.rzpOpen = false; }
     $('payOverlay').classList.add('active');
     $('payContent').innerHTML = `
         <div class="pay-amount">${fmtPrice(b.price)}</div>
         <div class="pay-batch">${esc(b.title)}</div>
+        <div class="pay-sum"><span><i class="fas fa-clock"></i> Validity</span><b>${Number(b.days || 365)} days</b></div>
         <div class="pay-methods">
             <div class="pay-method active" data-method="razorpay" onclick="selectPayMethod('razorpay')"><i class="fas fa-credit-card"></i> Pay Online</div>
             <div class="pay-method" data-method="upi" onclick="selectPayMethod('upi')"><i class="fas fa-mobile-alt"></i> Manual UPI</div>
         </div>
         <div id="payPanel"></div>
+        <div class="pay-err" id="payErr"></div>
         <button class="pay-btn" id="payBtn" onclick="processPayment()"><i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}</button>
         <div class="pay-secure"><i class="fas fa-shield-alt"></i> Access is activated after payment verification.<br>By paying you agree to our <a onclick="showPolicy('terms')" style="color:#0ea5e9;cursor:pointer">Terms</a> &amp; <a onclick="showPolicy('refund')" style="color:#0ea5e9;cursor:pointer">Refund Policy</a></div>
     `;
@@ -2103,6 +2146,7 @@ function renderPayPanel() {
         panel.innerHTML = `
             <div class="pay-panel">
                 <p class="pay-note"><i class="fas fa-shield-alt"></i> Pay securely with UPI, Card or NetBanking via Razorpay. Your course unlocks automatically after payment.</p>
+                ${/^rzp_test_/.test(RAZORPAY_KEY_ID) ? '<div class="pay-test"><b>TEST MODE:</b> asli card / UPI app se payment fail hoga. Test card <b>4111 1111 1111 1111</b> (koi bhi future expiry, koi bhi CVV) ya UPI ID <b>success@razorpay</b> use karo. Asli payment ke liye Razorpay <b>Live Key</b> (rzp_live_...) lagao.</div>' : ''}
             </div>
         `;
     } else if(state.paymentMethod === 'upi') {
@@ -2148,7 +2192,9 @@ function renderPayPanel() {
 }
 
 function closePayment() {
-    if(state.processing) return;
+    if(state.saving) return;
+    state.processing = false; state.rzpOpen = false;
+    { const pb = $('payBtn'), bb = state.currentBatch; if(pb && bb) { pb.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(bb.price)}`; pb.disabled = false; } }
     $('payOverlay').classList.remove('active');
 }
 
@@ -2191,7 +2237,14 @@ async function processPayment() {
 /* ================= RAZORPAY CHECKOUT (direct, bina backend / Cloud Functions ke) ================= */
 const RAZORPAY_KEY_ID = 'rzp_test_U1l2jitWg2MNdE';
 
-function resetPayBtn(btn, b) { btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false; state.processing = false; }
+function resetPayBtn(btn, b) { btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false; state.processing = false; state.rzpOpen = false; }
+function payError(msg) { const e = $('payErr'); if(e) { e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; } }
+/* Razorpay window band ho gayi par callback nahi aaya (jaise alert ke baad) to button wapas chalu kar do */
+setInterval(function() {
+    if(state.processing && state.rzpOpen && !state.saving && !document.querySelector('.razorpay-container')) {
+        const pb = $('payBtn'), bb = state.currentBatch; if(pb && bb) resetPayBtn(pb, bb); else { state.processing = false; state.rzpOpen = false; }
+    }
+}, 1500);
 
 function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -2215,7 +2268,8 @@ async function payWithRazorpay(b, btn) {
     const price = Number(b.price);
     if(!(price >= 1)) return toast('Invalid price');
 
-    state.processing = true;
+    payError('');
+    state.processing = true; state.rzpOpen = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; btn.disabled = true;
 
     const email = (state.user.email && state.user.email.indexOf(PHONE_DOMAIN) === -1) ? state.user.email : '';
@@ -2228,12 +2282,12 @@ async function payWithRazorpay(b, btn) {
         amount: Math.round(price * 100),   // paise me (₹299 => 29900)
         currency: 'INR',
         name: 'Gyan Automation',
-        description: b.title,
+        description: String(b.title || 'Course').slice(0, 120),
         prefill: (function(){ var pf = { name: userName }; var d = String(phone || '').replace(/\D/g, '').slice(-10); if(/^\S+@\S+\.\S+$/.test(email)) pf.email = email; if(d.length === 10) pf.contact = d; return pf; })(),
         notes: { batchId: b.id, uid: state.user.uid },   // Razorpay dashboard me dikhega
         theme: { color: '#2563eb' },
         handler: async function(resp) {
-            paid = true;
+            paid = true; state.saving = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Purchase...';
             const pid = resp.razorpay_payment_id;
             const now = Date.now();
@@ -2264,27 +2318,33 @@ async function payWithRazorpay(b, btn) {
             if(rPurchase.ok) {
                 if(!rOrder.ok) console.warn('Order record save nahi hua:', rOrder.err, pid);
                 $('payContent').innerHTML = `<div class="pay-success"><div class="success-check"><i class="fas fa-check"></i></div><h3>Payment Successful!</h3><p>Your batch is now unlocked.</p><div class="pay-receipt">Payment ID: ${esc(pid)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Done</button></div>`;
-                state.processing = false;
+                state.processing = false; state.saving = false; state.rzpOpen = false;
                 setTimeout(() => { $('payOverlay').classList.remove('active'); refreshCurrent(); }, 2000);
             } else {
                 const msg = fallbackOk
                     ? 'Aapka payment request admin ko bhej diya gaya hai. Batch jaldi unlock ho jayega.'
                     : 'Purchase save nahi ho paya. Is Payment ID ke saath support se contact karo, batch jaldi unlock kar diya jayega.';
                 $('payContent').innerHTML = `<div class="pay-success"><div class="success-check" style="background:#f59e0b"><i class="fas fa-exclamation"></i></div><h3>Payment Received</h3><p>Paisa safe hai. ${msg}</p><div class="pay-receipt">Payment ID: ${esc(pid)}</div><br><br><button class="pay-btn" onclick="closePayment()" style="max-width:220px;margin:0 auto;">Close</button></div>`;
-                state.processing = false;
+                state.processing = false; state.saving = false; state.rzpOpen = false;
             }
         },
-        modal: { escape: true, confirm_close: false, ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
+        retry: { enabled: true, max_count: 3 },
+        remember_customer: false,
+        modal: { escape: true, confirm_close: false, backdropclose: false, handleback: true, ondismiss: function() { if(!paid) { toast('Payment cancelled'); resetPayBtn(btn, b); } } }
     };
 
     try {
         const rzp = new Razorpay(options);
         rzp.on('payment.failed', function(r) {
-            toast('Payment failed: ' + ((r.error && r.error.description) || 'try again'));
+            const er = (r && r.error) || {};
+            const why = [er.description, er.reason, er.code].filter(Boolean).join(' | ') || 'try again';
+            console.warn('Razorpay payment.failed', er);
+            payError('Payment failed: ' + why + (/^rzp_test_/.test(RAZORPAY_KEY_ID) ? '  (Test mode: test card 4111 1111 1111 1111 ya UPI success@razorpay use karo)' : ''));
+            toast('Payment failed: ' + why);
             resetPayBtn(btn, b);
         });
         rzp.open();
-    } catch(e) { toast('Checkout open nahi hua: ' + e.message); resetPayBtn(btn, b); }
+    } catch(e) { payError('Checkout open nahi hua: ' + e.message); toast('Checkout open nahi hua: ' + e.message); resetPayBtn(btn, b); }
 }
 
 /* ================= CATEGORY ================= */
@@ -3715,9 +3775,22 @@ function gcParseVideoInput(raw){
 .ga-in{position:absolute;inset:0}
 .ga-in .plyr{height:100%;width:100%;--plyr-color-main:#0ea5e9}
 .ga-in .plyr__video-wrapper{background:#000}
-.ga-in iframe,.ga-in video{border:0;width:100%;height:100%;display:block}
+.ga-in>iframe,.ga-in video{border:0;width:100%;height:100%;display:block}
 .ga-in>iframe,.ga-in>video{position:absolute;inset:0}
-.ga-in .plyr--youtube .plyr__video-embed iframe{transform:scale(1.18);transform-origin:center center}
+.ga-in .plyr--youtube .plyr__video-wrapper{position:relative!important;overflow:hidden!important;width:100%!important;height:auto!important;padding-bottom:0!important;aspect-ratio:16/9;background:#000}
+.ga-in .plyr--youtube .plyr__video-embed{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;padding:0!important;aspect-ratio:auto!important;overflow:hidden!important;background:#000}
+/* iframe video se 90px upar/neeche bada: YouTube ka title, share, logo, 'more videos' sab is extra kaali patti me jaata hai aur crop ho jaata hai (video crop nahi hota) */
+.ga-in .plyr--youtube .plyr__video-embed iframe{position:absolute!important;left:0!important;top:-90px!important;width:100%!important;height:calc(100% + 180px)!important;transform:none!important;pointer-events:none!important}
+.ga-in .plyr__poster{display:none!important}
+.ga-fsb{color:#fff;display:inline-flex;align-items:center;justify-content:center;min-width:34px}
+.ga-fsb i{font-size:15px}
+/* fullscreen: poori screen par video 16:9 me fit (YouTube jaisa), landscape lock JS se */
+.ga-in:fullscreen{background:#000;display:flex;align-items:center;justify-content:center}
+.ga-in:-webkit-full-screen{background:#000;display:flex;align-items:center;justify-content:center}
+.ga-in.ga-pfs{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483000;background:#000;display:flex;align-items:center;justify-content:center}
+.ga-in:fullscreen .plyr{width:min(100vw,calc(100vh*16/9))!important;height:auto!important;aspect-ratio:16/9;flex:none}
+.ga-in:-webkit-full-screen .plyr{width:min(100vw,calc(100vh*16/9))!important;height:auto!important;aspect-ratio:16/9;flex:none}
+.ga-in.ga-pfs .plyr{width:min(100vw,calc(100vh*16/9))!important;height:auto!important;aspect-ratio:16/9;flex:none}
 .ga-in .plyr__controls{padding-bottom:6px}
 .ga-shield{position:absolute;left:0;right:0;top:0;bottom:45px;z-index:2;background:transparent;cursor:pointer}
 .ga-thumb{position:absolute;inset:0;z-index:2;background:#000 center/cover no-repeat;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:opacity .25s}
@@ -3763,6 +3836,13 @@ function gcParseVideoInput(raw){
 .ga-pill{display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#dc2626;font-size:10px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:20px;margin-right:6px}
 .ga-pill i{width:6px;height:6px;border-radius:50%;background:#dc2626;animation:gaPulse 1.2s infinite}
 @media(max-width:600px){.ga-pbtn{width:54px;height:54px;font-size:22px}}
+/* payment sheet polish */
+.pay-sheet{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.pay-sum{display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:11px 14px;margin:-8px 0 18px;font-size:12px;color:#64748b}
+.pay-sum b{color:#0f172a;font-size:13px}
+.pay-err{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;margin:0 0 12px}
+.pay-test{margin-top:10px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:12px;padding:10px 12px;font-size:11.5px;line-height:1.55}
+.pay-btn:disabled{opacity:.75;cursor:not-allowed;transform:none;box-shadow:none}
 </style>
 <script>
 /* ===================== GA : player + Classes (in-app) ===================== */
@@ -3771,14 +3851,51 @@ window.GA = (function(){
   var E = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); };
   var plyr = null, hls = null, wm = null;
   var D = { all: [], unsub: null, err: null, filter: '', want: null, cur: null, sig: '', prev: 'home-view' };
-  var PLYR_OPTS = { controls: ['play','progress','current-time','mute','volume','settings','fullscreen'], settings: ['quality','speed'], keyboard: { focused: true, global: false }, tooltips: { controls: false, seek: true } };
+  var PLYR_OPTS = { controls: ['play','progress','current-time','mute','volume','settings'], fullscreen: { enabled: false }, settings: ['quality','speed'], keyboard: { focused: true, global: false }, tooltips: { controls: false, seek: true } };
   var isLive = function(c){ return c.mode === 'meet' || c.mode === 'live'; };
 
   function label(){
     var p = state.profile || {}, u = state.user || {};
     return [p.name || (u.email ? u.email.split('@')[0] : 'Student'), p.phone].filter(Boolean).join(' \u2022 ');
   }
+  /* ---- custom fullscreen: landscape lock + 16:9 fit (YouTube jaisa) ---- */
+  var fsEl = function(){ return document.fullscreenElement || document.webkitFullscreenElement || null; };
+  function fsLock(on){ try{ if(screen.orientation){ if(on && screen.orientation.lock) screen.orientation.lock('landscape').catch(function(){}); else if(!on && screen.orientation.unlock) screen.orientation.unlock(); } }catch(e){} }
+  function pfs(host, on){ host.classList.toggle('ga-pfs', on); document.documentElement.style.overflow = on ? 'hidden' : ''; fsIcon(); }
+  function enterFs(host){
+    var rq = host.requestFullscreen || host.webkitRequestFullscreen;
+    if(rq){
+      try{
+        var r = rq.call(host);
+        if(r && r.then) r.then(function(){ fsLock(true); fsIcon(); }).catch(function(){ pfs(host, true); fsLock(true); });
+        else { fsLock(true); fsIcon(); }
+        return;
+      }catch(e){}
+    }
+    pfs(host, true); fsLock(true);
+  }
+  function exitFs(host){
+    if(host && host.classList.contains('ga-pfs')) { pfs(host, false); fsLock(false); return; }
+    if(fsEl()){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} }
+    fsLock(false);
+  }
+  function isFs(host){ return fsEl() === host || host.classList.contains('ga-pfs'); }
+  function fsIcon(){ var b = document.querySelectorAll('.ga-fsb i'); for(var i = 0; i < b.length; i++){ var h = b[i].closest('.ga-in'); b[i].className = 'fas ' + (h && isFs(h) ? 'fa-compress' : 'fa-expand'); } }
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(function(ev){ document.addEventListener(ev, function(){ if(!fsEl()) fsLock(false); fsIcon(); }); });
+  function addFs(p, host){
+    var add = function(){
+      var c = p && p.elements && p.elements.controls;
+      if(!c || c.querySelector('.ga-fsb')) return;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'plyr__controls__item plyr__control ga-fsb'; b.setAttribute('aria-label', 'Fullscreen');
+      b.innerHTML = '<i class="fas fa-expand"></i>';
+      b.onclick = function(e){ e.stopPropagation(); isFs(host) ? exitFs(host) : enterFs(host); };
+      c.appendChild(b);
+    };
+    p.on('ready', add); add();
+  }
   function destroy(){
+    var fh = document.querySelector('.ga-in.ga-pfs'); if(fh) pfs(fh, false);
+    if(fsEl()){ try{ (document.exitFullscreen || document.webkitExitFullscreen).call(document); }catch(e){} fsLock(false); }
     clearInterval(wm); wm = null;
     if(plyr){ try{ plyr.destroy(); }catch(e){} plyr = null; }
     if(hls){ try{ hls.destroy(); }catch(e){} hls = null; }
@@ -3815,7 +3932,8 @@ window.GA = (function(){
       var shield = document.createElement('div'); shield.className = 'ga-shield';
       w.appendChild(shield); w.appendChild(thumb); watermark(w);
       shield.onclick = function(){ p.togglePlay(); };
-      shield.ondblclick = function(){ p.fullscreen.toggle(); };
+      shield.ondblclick = function(){ isFs(st) ? exitFs(st) : enterFs(st); };
+      addFs(p, st);
       thumb.onclick = function(){ p.play(); };
       p.on('playing', function(){ thumb.classList.add('hide'); });
       p.on('pause', function(){ setTimeout(function(){ if(plyr === p && p.paused) thumb.classList.remove('hide'); }, 250); });
@@ -3826,7 +3944,7 @@ window.GA = (function(){
       if(!/^\d{6,}$/.test(String(d.id || ''))) return fail('Vimeo link sahi nahi hai.');
       st.innerHTML = '<div id="gaYt" data-plyr-provider="vimeo" data-plyr-embed-id="' + d.id + '"></div>';
       plyr = new Plyr('#gaYt', Object.assign({}, PLYR_OPTS, { ratio: '16:9', vimeo: { dnt: true, playsinline: true } }));
-      watermark(plyr.elements.wrapper);
+      watermark(plyr.elements.wrapper); addFs(plyr, st);
       return;
     }
     if(d.kind === 'video'){
@@ -3837,7 +3955,7 @@ window.GA = (function(){
       if(isHls && window.Hls && Hls.isSupported()){ hls = new Hls(); hls.loadSource(url); hls.attachMedia(v); }
       else v.src = url;
       plyr = new Plyr(v, Object.assign({}, PLYR_OPTS, { ratio: '16:9' }));
-      watermark(plyr.elements.wrapper);
+      watermark(plyr.elements.wrapper); addFs(plyr, st);
       return;
     }
     var iu = /^https:\/\//i.test(d.src || '') ? d.src : '';
