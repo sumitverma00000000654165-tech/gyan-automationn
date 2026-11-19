@@ -2235,7 +2235,7 @@ async function processPayment() {
 }
 
 /* ================= RAZORPAY CHECKOUT (direct, bina backend / Cloud Functions ke) ================= */
-const RAZORPAY_KEY_ID = 'rzp_test_U1l2jitWg2MNdE';
+const RAZORPAY_KEY_ID = 'rzp_test_U1mAbCZW9ywdQE';
 
 function resetPayBtn(btn, b) { btn.innerHTML = `<i class="fas fa-lock"></i> Pay ${fmtPrice(b.price)}`; btn.disabled = false; state.processing = false; state.rzpOpen = false; }
 function payError(msg) { const e = $('payErr'); if(e) { e.textContent = msg || ''; e.style.display = msg ? 'block' : 'none'; } }
